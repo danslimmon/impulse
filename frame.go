@@ -42,7 +42,7 @@ func (f *Frame) Pop() *Frame {
 
 // Insert adds c to f's children at the bottom-most position.
 func (f *Frame) Insert(c *Frame) {
-	return
+	f.Children = append([]*Frame{c}, f.Children...)
 }
 
 // NewFrame returns a new Frame with the given name.

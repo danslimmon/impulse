@@ -41,8 +41,6 @@ func TestFrame_Pop(t *testing.T) {
 	assert.Nil(f.Parent)
 	c := NewFrame("cook pasta")
 	f.Push(c)
-	assert.Equal("cook pasta", c.Name)
-	assert.Equal(f, c.Parent)
 
 	c.Push(NewFrame("turn on burner"))
 	c.Push(NewFrame("put pot on burner"))
@@ -70,4 +68,23 @@ func TestFrame_Pop(t *testing.T) {
 }
 
 func TestFrame_Insert(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	f := NewFrame("cook pasta")
+	f.Insert(NewFrame("put water in pot"))
+	f.Insert(NewFrame("put pot on burner"))
+	f.Insert(NewFrame("turn on burner"))
+
+	c := f.Pop()
+	assert.NotNil(c)
+	assert.Equal(c.Name, "put water in pot")
+
+	c = f.Pop()
+	assert.NotNil(c)
+	assert.Equal(c.Name, "put pot on burner")
+
+	c = f.Pop()
+	assert.NotNil(c)
+	assert.Equal(c.Name, "turn on burner")
 }
