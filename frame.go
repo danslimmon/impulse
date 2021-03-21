@@ -1,5 +1,25 @@
 package main
 
+import (
+	"errors"
+)
+
+// FrameWalkFunc is a function that can be passed to Frame.Walk.
+//
+// At each Frame visited by Walk, the FrameWalkFunc is passed that Frame. If the FrameWalkFunc
+// returns an error, the walk will be aborted and that error will be returned by Walk.
+//
+// FrameWalkFunc should surface any error it receives in the course of its operation by returning
+// it, so that Walk can return that to its caller. If FrameWalkFunc wants to end the walk early but
+// there's not an error per se, then it should return the special error EndWalk. If the caller of
+// Walk passes a FrameWalkFunc that may return EndWalk, then the caller may check whether Walk
+// returned EndWalk and act accordingly.
+type FrameWalkFunc func(*Frame) error
+
+var (
+	EndWalk error = errors.New("Ended walk at FrameWalkFunc's request")
+)
+
 // Frame is a node of the stack. It represents a task.
 //
 // You can also just think of a Frame as a single line in the stack view.
@@ -43,6 +63,37 @@ func (f *Frame) Pop() *Frame {
 // Insert adds c to f's children at the bottom-most position.
 func (f *Frame) Insert(c *Frame) {
 	f.Children = append([]*Frame{c}, f.Children...)
+}
+
+// Depth returns the number of ancestors Frame has.
+//
+// The root frame's Depth is 0. Children of the root frame have Depth 1. And so on.
+func (f *Frame) Depth() int {
+	if f.Parent == nil {
+		return 0
+	}
+	return f.Parent.Depth() + 1
+}
+
+// Walk calls the given function once for each descendant frame of f.
+//
+// The order is depth-first, bottom to top.
+//
+// If fn returns an error, the walk is aborted and that error is returned by Walk. See
+// FrameWalkFunc's definition for more info.
+func (f *Frame) Walk(fn FrameWalkFunc) error {
+	err := fn(f)
+	if err != nil {
+		return err
+	}
+
+	for _, c := range f.Children {
+		err := c.Walk(fn)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // NewFrame returns a new Frame with the given name.

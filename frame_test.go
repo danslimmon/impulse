@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -87,4 +88,66 @@ func TestFrame_Insert(t *testing.T) {
 	c = f.Pop()
 	assert.NotNil(c)
 	assert.Equal(c.Name, "turn on burner")
+}
+
+func TestFrame_Walk(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	f := NewFrame("")
+	f.Push(NewFrame("cook pasta"))
+	f.Children[0].Push(NewFrame("boil water"))
+
+	assert.Equal(0, f.Depth())
+	assert.Equal(1, f.Children[0].Depth())
+	assert.Equal(2, f.Children[0].Children[0].Depth())
+}
+
+func TestFrame_Depth(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	f := NewFrame("")
+	f.Push(NewFrame("cook pasta"))
+	f.Children[0].Push(NewFrame("boil water"))
+	f.Children[0].Children[0].Push(NewFrame("turn on burner"))
+	f.Children[0].Children[0].Push(NewFrame("put pot on burner"))
+	f.Children[0].Children[0].Push(NewFrame("put water in pot"))
+	f.Push(NewFrame("check twitter"))
+
+	exp := []string{
+		"",
+		"cook pasta",
+		"boil water",
+		"turn on burner",
+		"put pot on burner",
+		"put water in pot",
+		"check twitter",
+	}
+	var i int
+	err := f.Walk(func(node *Frame) error {
+		assert.Equal(exp[i], node.Name)
+		i++
+		return nil
+	})
+	assert.Equal(len(exp), i)
+	assert.Nil(err)
+}
+
+// Walk should exit immediately and return the error that FrameWalkFunc returned.
+func TestFrame_Walk_Error(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	f := NewFrame("cook pasta")
+	f.Push(NewFrame("boil water"))
+
+	var i int
+	errToReturn := fmt.Errorf("dumb error")
+	err := f.Walk(func(node *Frame) error {
+		i++
+		return errToReturn
+	})
+	assert.Equal(errToReturn, err)
+	assert.Equal(1, i)
 }
