@@ -18,9 +18,7 @@ type TreeNode struct {
 	children []*TreeNode
 	// nil for the root node
 	parent *TreeNode
-	// Whether the TreeNode is currently selected in the UI
-	selected bool
-	task     *Task
+	task   *Task
 }
 
 // Depth returns the number of ancestors that node has.
@@ -59,19 +57,10 @@ func (node *TreeNode) Walk(callback func(*TreeNode, *TreeNode) bool) bool {
 	return true
 }
 
-// Line returns a treeLine to be used to represent the node on the screen.
-func (node *TreeNode) Line() treeLine {
+// Line returns a string to be used to represent the node on the screen.
+func (node *TreeNode) Line() string {
 	indent := strings.Repeat(nodeIndent, node.Depth()-1)
-
-	color := tcell.ColorReset
-	if node.selected {
-		color = tcell.GetColor("blue")
-	}
-
-	return treeLine{
-		text:  fmt.Sprintf("%s%s", indent, node.task.Title),
-		color: color,
-	}
+	return fmt.Sprintf("%s%s", indent, node.task.Title)
 }
 
 // newTreeNode returns a TreeNode with the given parent and Task.
@@ -105,6 +94,16 @@ type Tree struct {
 	*tview.Box
 
 	root *TreeNode
+	// the currently selected node
+	currentNode *TreeNode
+}
+
+// SetCurrentNode sets the currently selected node.
+//
+// Provide nil to clear all selections.
+func (tree *Tree) SetCurrentNode(node *TreeNode) *Tree {
+	tree.currentNode = node
+	return tree
 }
 
 // PushTask adds to the root node a new TreeNode for the given task.
@@ -120,24 +119,30 @@ func (tree *Tree) Walk(callback func(*TreeNode, *TreeNode) bool) bool {
 }
 
 // Draw draws this primitive onto the screen.
-func (t *Tree) Draw(screen tcell.Screen) {
+func (tree *Tree) Draw(screen tcell.Screen) {
 	lines := []treeLine{}
 
-	t.Walk(func(node, parent *TreeNode) bool {
+	tree.Walk(func(node, parent *TreeNode) bool {
 		if parent == nil {
 			// Root node has no task to draw
 			return true
 		}
-		lines = append(lines, node.Line())
+
+		color := tcell.ColorReset
+		if tree.currentNode == node {
+			color = tcell.GetColor("blue")
+		}
+
+		lines = append(lines, treeLine{node.Line(), color})
 		return true
 	})
 
-	_, _, width, _ := t.GetInnerRect()
+	_, _, width, _ := tree.GetInnerRect()
 	nLines := len(lines)
 	for i, line := range lines {
 		tview.Print(
 			screen,
-			line.text,
+			line.text,       // text
 			0,               // x
 			nLines-1-i,      // y
 			width,           // maxWidth

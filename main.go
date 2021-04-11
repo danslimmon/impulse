@@ -9,7 +9,7 @@ func defaultTree() *Tree {
 	tree := NewTree()
 	makePasta := tree.PushTask(&Task{Title: "make pasta"})
 	boilWater := makePasta.PushTask(&Task{Title: "boil water"})
-	boilWater.selected = true
+	tree.SetCurrentNode(boilWater)
 	return tree
 }
 
