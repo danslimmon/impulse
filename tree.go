@@ -1,8 +1,15 @@
 package main
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+)
+
+const (
+	nodeIndent = "    "
 )
 
 // TreeNode is a node in a Tree.
@@ -12,6 +19,16 @@ type TreeNode struct {
 	parent *TreeNode
 	// Ordered from bottom to top
 	children []*TreeNode
+}
+
+// Depth returns the number of ancestors that node has.
+//
+// For example, the Depth of the root node is 0. The depth of one of the root node's children is 1.
+func (node *TreeNode) Depth() int {
+	if node.parent == nil {
+		return 0
+	}
+	return 1 + node.parent.Depth()
 }
 
 // PushTask adds a new TreeNode for the given task.
@@ -29,7 +46,7 @@ func (node *TreeNode) PushTask(task *Task) *TreeNode {
 // continue with the traversed node's child nodes (true) or not recurse any deeper (false).
 //
 // The return value of Walk is equal to the return value of callback when called on node.
-func (node *TreeNode) Walk(callback func(node, parent *TreeNode) bool) bool {
+func (node *TreeNode) Walk(callback func(*TreeNode, *TreeNode) bool) bool {
 	cont := callback(node, node.parent)
 	if !cont {
 		return false
@@ -75,12 +92,35 @@ func (tree *Tree) PushTask(task *Task) *TreeNode {
 }
 
 // Walk calls walk on the tree's root node.
-func (tree *Tree) Walk(callback func(node, parent *TreeNode) bool) bool {
+func (tree *Tree) Walk(callback func(*TreeNode, *TreeNode) bool) bool {
 	return tree.root.Walk(callback)
 }
 
 // Draw draws this primitive onto the screen.
 func (t *Tree) Draw(screen tcell.Screen) {
+	row := 0
+	t.Walk(func(node, parent *TreeNode) bool {
+		if parent == nil {
+			// Root node has no task to draw
+			return true
+		}
+
+		_, _, width, _ := t.GetInnerRect()
+
+		indent := strings.Repeat(nodeIndent, node.Depth())
+		tview.Print(
+			screen,
+			fmt.Sprintf("%s%s", indent, node.task.Title), // text
+			0,                      // x
+			row,                    // y
+			width,                  // maxWidth
+			tview.AlignLeft,        // align
+			tcell.GetColor("blue"), // color
+		)
+
+		row++
+		return true
+	})
 }
 
 // this is the one we have to implement
