@@ -14,11 +14,13 @@ const (
 
 // TreeNode is a node in a Tree.
 type TreeNode struct {
-	task *Task
-	// nil for the root node
-	parent *TreeNode
 	// Ordered from bottom to top
 	children []*TreeNode
+	// nil for the root node
+	parent *TreeNode
+	// Whether the TreeNode is currently selected in the UI
+	selected bool
+	task     *Task
 }
 
 // Depth returns the number of ancestors that node has.
@@ -57,6 +59,21 @@ func (node *TreeNode) Walk(callback func(*TreeNode, *TreeNode) bool) bool {
 	return true
 }
 
+// Line returns a treeLine to be used to represent the node on the screen.
+func (node *TreeNode) Line() treeLine {
+	indent := strings.Repeat(nodeIndent, node.Depth()-1)
+
+	color := tcell.ColorReset
+	if node.selected {
+		color = tcell.GetColor("blue")
+	}
+
+	return treeLine{
+		text:  fmt.Sprintf("%s%s", indent, node.task.Title),
+		color: color,
+	}
+}
+
 // newTreeNode returns a TreeNode with the given parent and Task.
 func newTreeNode(parent *TreeNode, task *Task) *TreeNode {
 	return &TreeNode{
@@ -72,6 +89,12 @@ func rootTreeNode() *TreeNode {
 		parent:   nil,
 		children: []*TreeNode{},
 	}
+}
+
+// TreeLine is a line in the screen representation of a tree.
+type treeLine struct {
+	text  string
+	color tcell.Color
 }
 
 // Tree is the tree of tasks in Impulse.
@@ -98,29 +121,30 @@ func (tree *Tree) Walk(callback func(*TreeNode, *TreeNode) bool) bool {
 
 // Draw draws this primitive onto the screen.
 func (t *Tree) Draw(screen tcell.Screen) {
-	row := 0
+	lines := []treeLine{}
+
 	t.Walk(func(node, parent *TreeNode) bool {
 		if parent == nil {
 			// Root node has no task to draw
 			return true
 		}
-
-		_, _, width, _ := t.GetInnerRect()
-
-		indent := strings.Repeat(nodeIndent, node.Depth())
-		tview.Print(
-			screen,
-			fmt.Sprintf("%s%s", indent, node.task.Title), // text
-			0,                      // x
-			row,                    // y
-			width,                  // maxWidth
-			tview.AlignLeft,        // align
-			tcell.GetColor("blue"), // color
-		)
-
-		row++
+		lines = append(lines, node.Line())
 		return true
 	})
+
+	_, _, width, _ := t.GetInnerRect()
+	nLines := len(lines)
+	for i, line := range lines {
+		tview.Print(
+			screen,
+			line.text,
+			0,               // x
+			nLines-1-i,      // y
+			width,           // maxWidth
+			tview.AlignLeft, // align
+			line.color,      // color
+		)
+	}
 }
 
 // this is the one we have to implement
