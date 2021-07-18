@@ -25,6 +25,13 @@ func main() {
 	r, _ := http.NewRequest("GET", "http://localhost/hello", nil)
 
 	mux.ServeHTTP(w, r)
-	body, _ := buf.ReadString('\n')
-	log.WithField("body", body).Info("response body")
+	/*
+		p := []byte{}
+		n, err := buf.Read(p)
+		if err != nil {
+			log.WithField("error", err).Error("wtf")
+			os.Exit(1)
+		}
+	*/
+	log.WithField("body", buf.String()).Info("response body")
 }
