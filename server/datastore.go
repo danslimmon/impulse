@@ -33,6 +33,6 @@ func (ds *FilesystemDatastore) absPath(treename string) string {
 	return filepath.Join(ds.rootDir, treename)
 }
 
-func (ds *FilesystemDatastore) GetFileContents(treename string) ([]byte, error) {
+func (ds *FilesystemDatastore) GetTreeData(treename string) ([]byte, error) {
 	return ioutil.ReadFile(ds.absPath(treename))
 }
