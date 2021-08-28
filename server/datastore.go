@@ -36,3 +36,7 @@ func (ds *FilesystemDatastore) absPath(treename string) string {
 func (ds *FilesystemDatastore) GetTreeData(treename string) ([]byte, error) {
 	return ioutil.ReadFile(ds.absPath(treename))
 }
+
+func NewFilesystemDatastore(rootDir string) *FilesystemDatastore {
+	return &FilesystemDatastore{rootDir: rootDir}
+}

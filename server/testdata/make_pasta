@@ -1,0 +1,8 @@
+		put water in pot
+		put pot on burner
+		turn burner on
+	boil water
+	put pasta in water
+	[b cooked]
+	drain pasta
+make pasta
