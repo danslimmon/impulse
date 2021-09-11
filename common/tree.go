@@ -2,6 +2,8 @@ package common
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 	"sync"
 )
 
@@ -16,15 +18,43 @@ var SkipSubtree = errors.New("skip this subtree")
 type TreeWalkFunc func(*TreeNode) error
 
 type TreeNode struct {
+	Parent   *TreeNode
 	Children []*TreeNode
 	Referent string
 	mu       sync.Mutex
 }
 
+// Depth returns the number of ancestors of n.
+func (n *TreeNode) Depth() int {
+	i := 0
+	for n.Parent != nil {
+		i++
+		n = n.Parent
+	}
+	return i
+}
+
+// AddChild makes childNode a child of n.
+//
+// childNode is added at the end of n.Children.
 func (n *TreeNode) AddChild(childNode *TreeNode) {
 	n.mu.Lock()
+	defer n.mu.Unlock()
+	childNode.Parent = n
 	n.Children = append(n.Children, childNode)
-	n.mu.Unlock()
+}
+
+// InsertChild makes childNode a child of n, placing it at the given position among n.Children.
+//
+// ind is the index in n.Children at which childNode will be inserted.
+func (n *TreeNode) InsertChild(ind int, childNode *TreeNode) {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
+	childNode.Parent = n
+	n.Children = append(n.Children, nil)
+	copy(n.Children[ind+1:], n.Children[ind:])
+	n.Children[ind] = childNode
 }
 
 // Walk walks the tree rooted at n, calling fn for each TreeNode, including n.
@@ -62,11 +92,30 @@ func (n *TreeNode) Walk(fn TreeWalkFunc) error {
 	return nil
 }
 
+// String returns a string representation of n, for use in logging and debugging.
+//
+// One should not use the return value of String() to compare TreeNodes. Instead, one should use
+// Equal() and/or write a custom TreeWalkFunc. String() is only for convenience.
+func (n *TreeNode) String() string {
+	var b strings.Builder
+	n.Walk(func(m *TreeNode) error {
+		b.WriteString(fmt.Sprintf("%s%s\n", strings.Repeat("\t", m.Depth()), m.Referent))
+		return nil
+	})
+	return b.String()
+}
+
 // Equal determines whether a is identical to b.
 //
 // Equal walks both trees and compares the corresponding nodes in a and b. If the two nodes' depth
 // and referent are equal, then the nodes are equal.
 func (a *TreeNode) Equal(b *TreeNode) bool {
+	if a == nil || b == nil {
+		// technically nil should equal nil, but… i don't want a situation where anybody's ever
+		// passing nil to this function
+		panic("called *TreeNode.Equal on nil TreeNode")
+	}
+
 	toChan := func(rootNode *TreeNode, ch chan *TreeNode) {
 		rootNode.Walk(func(n *TreeNode) error {
 			ch <- n
@@ -99,6 +148,7 @@ func (a *TreeNode) Equal(b *TreeNode) bool {
 	return true
 }
 
+// NewTreeNode returns a TreeNode with the given Referent.
 func NewTreeNode(referent string) *TreeNode {
 	return &TreeNode{
 		Children: []*TreeNode{},
