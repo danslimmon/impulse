@@ -154,6 +154,79 @@ func TestTreeNode_Walk_ZeroChildren(t *testing.T) {
 	)
 }
 
+func TestTreeNode_WalkFromTop(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	mp := MakePasta()[0]
+	referents := make([]string, 0)
+	err := mp.RootNode.WalkFromTop(func(vn *TreeNode) error {
+		referents = append(referents, vn.Referent)
+		return nil
+	})
+
+	assert.Nil(err)
+	assert.Equal(
+		[]string{
+			"put water in pot",
+			"put pot on burner",
+			"turn burner on",
+			"boil water",
+			"put pasta in water",
+			"[b cooked]",
+			"drain pasta",
+			"make pasta",
+		},
+		referents,
+	)
+}
+
+func TestTreeNode_WalkFromTop_Error(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	mp := MakePasta()[0]
+	referents := make([]string, 0)
+	expErr := errors.New("bleuhgarrg")
+	err := mp.RootNode.WalkFromTop(func(vn *TreeNode) error {
+		referents = append(referents, vn.Referent)
+		if vn.Referent == "turn burner on" {
+			return expErr
+		}
+		return nil
+	})
+
+	assert.Equal(expErr, err)
+	assert.Equal(
+		[]string{
+			"put water in pot",
+			"put pot on burner",
+			"turn burner on",
+		},
+		referents,
+	)
+}
+
+func TestTreeNode_WalkFromTop_ZeroChildren(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	n := NewTreeNode("childless node")
+	referents := make([]string, 0)
+	err := n.WalkFromTop(func(vn *TreeNode) error {
+		referents = append(referents, vn.Referent)
+		return nil
+	})
+
+	assert.Equal(nil, err)
+	assert.Equal(
+		[]string{
+			"childless node",
+		},
+		referents,
+	)
+}
+
 func TestTreeNode_Equal(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)

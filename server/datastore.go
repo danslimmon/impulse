@@ -14,6 +14,8 @@ import (
 type Datastore interface {
 	// Get returns the contents of the file corresponding to the given task list
 	Get(string) ([]byte, error)
+	// Put writes the given data to the file with the given name.
+	Put(string, []byte) error
 }
 
 // FilesystemDatastore is a Datastore implementation in which trees are marshaled into files in a
@@ -35,6 +37,10 @@ func (ds *FilesystemDatastore) absPath(name string) string {
 
 func (ds *FilesystemDatastore) Get(name string) ([]byte, error) {
 	return ioutil.ReadFile(ds.absPath(name))
+}
+
+func (ds *FilesystemDatastore) Put(name string, b []byte) error {
+	return ioutil.WriteFile(ds.absPath(name), b, 0644)
 }
 
 func NewFilesystemDatastore(rootDir string) *FilesystemDatastore {

@@ -7,10 +7,13 @@ import (
 	"github.com/danslimmon/impulse/common"
 )
 
+/*
 // Taskstore provides read and write access to Tree structs persisted to the Datastore.
 type Taskstore interface {
-	Get(string) (*common.TreeNode, error)
+	Get(string) ([]*common.Task, error)
+	Put(string, []*common.Task) error
 }
+*/
 
 // BasicTaskstore is a Taskstore implementation in which trees are stored in a basic,
 // text-editor-centric serialization format.
@@ -111,6 +114,20 @@ func (ts *BasicTaskstore) Get(name string) ([]*common.Task, error) {
 		rslt = append(rslt, common.NewTask(n))
 	}
 	return rslt, nil
+}
+
+// Put writes taskList to the Datastore as name.
+func (ts *BasicTaskstore) Put(name string, taskList []*common.Task) error {
+	b := []byte{}
+	for _, t := range taskList {
+		t.RootNode.WalkFromTop(func(n *common.TreeNode) error {
+			b = append(b, bytes.Repeat([]byte("\t"), n.Depth())...)
+			b = append(b, []byte(n.Referent)...)
+			b = append(b, []byte("\n")...)
+			return nil
+		})
+	}
+	return ts.datastore.Put(name, b)
 }
 
 // NewBasicTaskstore returns a BasicTaskstore with the given underlying datastore.

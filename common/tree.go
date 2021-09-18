@@ -92,6 +92,41 @@ func (n *TreeNode) Walk(fn TreeWalkFunc) error {
 	return nil
 }
 
+// WalkFromTop walks the tree rooted at n, calling fn for each TreeNode, including n.
+//
+// All errors that arise are filtered by fn: see the TreeWalkFunc documentation for details.
+//
+// WalkFromTop visits nodes from the top to the bottom of the task. For example, for the "make
+// pasta" task (server/testdata/make_pasta), fn would be called on the nodes in this order:
+//
+// - put water in pot
+// - put pot on burner
+// - turn burner on
+// - boil water
+// - put pasta in water
+// - [b cooked]
+// - drain pasta
+// - make pasta
+//
+// Since this is a depth-first walk, SkipSubtree is not treated specially: if fn returns
+// SkipSubtree, the walk exits with that error.
+func (n *TreeNode) WalkFromTop(fn TreeWalkFunc) error {
+	var err error
+	for _, cn := range n.Children {
+		err = cn.WalkFromTop(fn)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = fn(n)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // String returns a string representation of n, for use in logging and debugging.
 //
 // One should not use the return value of String() to compare TreeNodes. Instead, one should use
