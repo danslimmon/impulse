@@ -2,18 +2,17 @@ package server
 
 import (
 	"bytes"
-	//@DEBUG
 	"fmt"
 
 	"github.com/danslimmon/impulse/common"
 )
 
-// Treestore provides read and write access to Tree structs persisted to the Datastore.
-type Treestore interface {
-	GetTree(string) (*common.TreeNode, error)
+// Taskstore provides read and write access to Tree structs persisted to the Datastore.
+type Taskstore interface {
+	Get(string) (*common.TreeNode, error)
 }
 
-// BasicTreestore is a Treestore implementation in which trees are stored in a basic,
+// BasicTaskstore is a Taskstore implementation in which trees are stored in a basic,
 // text-editor-centric serialization format.
 //
 // The basic format consists of a sequence of lines. A line that is not indented is a direct child
@@ -22,7 +21,7 @@ type Treestore interface {
 // one less. The bottom line of a tree representation must not be indented.
 //
 // For examples, see treestore_test.go.
-type BasicTreestore struct {
+type BasicTaskstore struct {
 	datastore Datastore
 }
 
@@ -30,15 +29,15 @@ type BasicTreestore struct {
 //
 // It returns the integer number of tabs that occur at the beginning of the line (its indent level)
 // and the remaining text of the line as a string.
-func (ts *BasicTreestore) parseLine(line []byte) (int, string) {
+func (ts *BasicTaskstore) parseLine(line []byte) (int, string) {
 	textBytes := bytes.TrimLeft(line, "\t")
 	indent := len(line) - len(textBytes)
 	return indent, string(textBytes)
 }
 
-// GetTree retrieves the tree with the given name from the persistent Datastore.
-func (ts *BasicTreestore) GetTree(treename string) (*common.TreeNode, error) {
-	b, err := ts.datastore.GetTreeData(treename)
+// Get retrieves the task list with the given name from the persistent Datastore.
+func (ts *BasicTaskstore) Get(name string) ([]*common.Task, error) {
+	b, err := ts.datastore.Get(name)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +46,7 @@ func (ts *BasicTreestore) GetTree(treename string) (*common.TreeNode, error) {
 	// bottom to the top of the file. that's how we want it for constructing the tree further down.
 	splut := bytes.Split(b, []byte("\n"))
 	if len(splut) == 0 {
-		return common.NewTreeNode(""), nil
+		return []*common.Task{}, nil
 	}
 
 	nLines := len(splut)
@@ -60,7 +59,7 @@ func (ts *BasicTreestore) GetTree(treename string) (*common.TreeNode, error) {
 		lines = lines[1:]
 		nLines = nLines - 1
 	} else {
-		return nil, fmt.Errorf("error: data for tree '%s' does not end in newline", treename)
+		return nil, fmt.Errorf("error: data for tree '%s' does not end in newline", name)
 	}
 
 	rootNode := common.NewTreeNode("")
@@ -98,7 +97,7 @@ func (ts *BasicTreestore) GetTree(treename string) (*common.TreeNode, error) {
 			return nil, fmt.Errorf(
 				"error parsing line %d of tree '%s': unexpected deltaIndent = %d",
 				i,
-				treename,
+				name,
 				deltaIndent,
 			)
 		}
@@ -106,10 +105,15 @@ func (ts *BasicTreestore) GetTree(treename string) (*common.TreeNode, error) {
 		prevIndent = indent
 	}
 
-	return rootNode, nil
+	// Now we take all the children of rootNode and load them into the list to be returned.
+	rslt := make([]*common.Task, 0)
+	for _, n := range rootNode.Children {
+		rslt = append(rslt, common.NewTask(n))
+	}
+	return rslt, nil
 }
 
-// NewBasicTreestore returns a BasicTreestore with the given underlying datastore.
-func NewBasicTreestore(datastore Datastore) *BasicTreestore {
-	return &BasicTreestore{datastore: datastore}
+// NewBasicTaskstore returns a BasicTaskstore with the given underlying datastore.
+func NewBasicTaskstore(datastore Datastore) *BasicTaskstore {
+	return &BasicTaskstore{datastore: datastore}
 }

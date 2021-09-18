@@ -9,14 +9,14 @@ import (
 //
 // A Datastore implementation is responsible for:
 //
-//   - Mapping tree names to the corresponding objects in the database (e.g. files on disk)
+//   - Mapping task list names to the corresponding objects in the database (e.g. files on disk)
 //   - Reading and writing the data in those objects
 type Datastore interface {
-	// GetTreeData returns the contents of the file corresponding to the given tree.
-	GetTreeData(string) ([]byte, error)
+	// Get returns the contents of the file corresponding to the given task list
+	Get(string) ([]byte, error)
 }
 
-// FilesystemDatastore is a Datastore implementation in which trees are marshaled onto files in a
+// FilesystemDatastore is a Datastore implementation in which trees are marshaled into files in a
 // straightforward directory tree according to their names.
 //
 // The root of the filesystem in which data is stored is RootDir.
@@ -28,13 +28,13 @@ type FilesystemDatastore struct {
 	rootDir string
 }
 
-// absPath returns the full path to the file that should contain the given tree's marshaled data.
-func (ds *FilesystemDatastore) absPath(treename string) string {
-	return filepath.Join(ds.rootDir, treename)
+// absPath returns the full path to the file that should contain the given task list's marshaled data.
+func (ds *FilesystemDatastore) absPath(name string) string {
+	return filepath.Join(ds.rootDir, name)
 }
 
-func (ds *FilesystemDatastore) GetTreeData(treename string) ([]byte, error) {
-	return ioutil.ReadFile(ds.absPath(treename))
+func (ds *FilesystemDatastore) Get(name string) ([]byte, error) {
+	return ioutil.ReadFile(ds.absPath(name))
 }
 
 func NewFilesystemDatastore(rootDir string) *FilesystemDatastore {

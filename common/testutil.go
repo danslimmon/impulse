@@ -12,7 +12,7 @@ package common
 //         [b cooked]
 //         drain pasta
 //     make pasta
-func MakePasta() *TreeNode {
+func MakePasta() []*Task {
 	makePasta := NewTreeNode("make pasta")
 
 	boilWater := NewTreeNode("boil water")
@@ -25,5 +25,5 @@ func MakePasta() *TreeNode {
 	makePasta.AddChild(NewTreeNode("[b cooked]"))
 	makePasta.AddChild(NewTreeNode("drain pasta"))
 
-	return makePasta
+	return []*Task{NewTask(makePasta)}
 }

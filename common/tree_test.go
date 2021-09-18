@@ -7,13 +7,29 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTree_Walk(t *testing.T) {
+func TestTreeNode_AddChild(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
-	n := MakePasta()
+	n := NewTreeNode("")
+	n.AddChild(NewTreeNode("a"))
+	n.AddChild(NewTreeNode("b"))
+	n.AddChild(NewTreeNode("c"))
+
+	rslt := make([]string, 0)
+	for _, ch := range n.Children {
+		rslt = append(rslt, ch.Referent)
+	}
+	assert.Equal([]string{"a", "b", "c"}, rslt)
+}
+
+func TestTreeNode_Walk(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	mp := MakePasta()[0]
 	referents := make([]string, 0)
-	err := n.Walk(func(vn *TreeNode) error {
+	err := mp.RootNode.Walk(func(vn *TreeNode) error {
 		referents = append(referents, vn.Referent)
 		return nil
 	})
@@ -34,13 +50,13 @@ func TestTree_Walk(t *testing.T) {
 	)
 }
 
-func TestTree_Walk_SkipSubtree(t *testing.T) {
+func TestTreeNode_Walk_SkipSubtree(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
-	n := MakePasta()
+	mp := MakePasta()[0]
 	referents := make([]string, 0)
-	err := n.Walk(func(vn *TreeNode) error {
+	err := mp.RootNode.Walk(func(vn *TreeNode) error {
 		referents = append(referents, vn.Referent)
 		if vn.Referent == "boil water" {
 			return SkipSubtree
@@ -61,14 +77,14 @@ func TestTree_Walk_SkipSubtree(t *testing.T) {
 	)
 }
 
-func TestTree_Walk_Error(t *testing.T) {
+func TestTreeNode_Walk_Error(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
-	n := MakePasta()
+	mp := MakePasta()[0]
 	referents := make([]string, 0)
 	expErr := errors.New("bleuhgarrg")
-	err := n.Walk(func(vn *TreeNode) error {
+	err := mp.RootNode.Walk(func(vn *TreeNode) error {
 		referents = append(referents, vn.Referent)
 		if vn.Referent == "boil water" {
 			return expErr
@@ -86,7 +102,7 @@ func TestTree_Walk_Error(t *testing.T) {
 	)
 }
 
-func TestTree_Walk_ZeroChildren(t *testing.T) {
+func TestTreeNode_Walk_ZeroChildren(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
@@ -106,25 +122,25 @@ func TestTree_Walk_ZeroChildren(t *testing.T) {
 	)
 }
 
-func TestTree_Equal(t *testing.T) {
+func TestTreeNode_Equal(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
-	a := MakePasta()
-	b := MakePasta()
+	a := MakePasta()[0]
+	b := MakePasta()[0]
 	assert.True(a.Equal(b))
 	assert.True(b.Equal(a))
 }
 
 // Two trees should not be evaluated as Equal if one of the corresponding node pairs differs in
 // referent
-func TestTree_Equal_Not_Referent(t *testing.T) {
+func TestTreeNode_Equal_Not_Referent(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
-	a := MakePasta()
-	b := MakePasta()
-	b.Walk(func(n *TreeNode) error {
+	a := MakePasta()[0]
+	b := MakePasta()[0]
+	b.RootNode.Walk(func(n *TreeNode) error {
 		if n.Referent == "put pot on burner" {
 			n.Referent = "put pot in bong"
 		}
@@ -136,13 +152,13 @@ func TestTree_Equal_Not_Referent(t *testing.T) {
 
 // Two trees should not be evaluated as Equal if one of the corresponding node pairs differs in
 // the number of children they have
-func TestTree_Equal_Not_ChildCount(t *testing.T) {
+func TestTreeNode_Equal_Not_ChildCount(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
-	a := MakePasta()
-	b := MakePasta()
-	b.Walk(func(n *TreeNode) error {
+	a := MakePasta()[0]
+	b := MakePasta()[0]
+	b.RootNode.Walk(func(n *TreeNode) error {
 		if n.Referent == "put pot on burner" {
 			n.AddChild(NewTreeNode("fhgwhgads"))
 		}
@@ -152,7 +168,7 @@ func TestTree_Equal_Not_ChildCount(t *testing.T) {
 	assert.False(b.Equal(a))
 }
 
-func TestTree_Equal_ZeroChildren(t *testing.T) {
+func TestTreeNode_Equal_ZeroChildren(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
@@ -162,7 +178,7 @@ func TestTree_Equal_ZeroChildren(t *testing.T) {
 	assert.True(b.Equal(a))
 }
 
-func TestTree_Depth(t *testing.T) {
+func TestTreeNode_Depth(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
