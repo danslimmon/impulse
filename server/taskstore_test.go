@@ -24,6 +24,27 @@ func TestBasicTaskstore_Get(t *testing.T) {
 	assert.True(rslt.RootNode.Equal(makePasta.RootNode))
 }
 
+func TestBasicTaskstore_Get_Malformed(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	ds := NewFilesystemDatastore("./testdata")
+	ts := NewBasicTaskstore(ds)
+
+	paths := []string{
+		"malformed/zero_length",
+		"malformed/excess_delta_indent",
+		"malformed/missing",
+	}
+	for _, p := range paths {
+		t.Log(p)
+		taskList, err := ts.Get(p)
+		t.Log(err)
+		assert.Empty(taskList)
+		assert.NotNil(err)
+	}
+}
+
 func TestBasicTaskstore_Put(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)

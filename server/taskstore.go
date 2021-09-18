@@ -44,11 +44,14 @@ func (ts *BasicTaskstore) Get(name string) ([]*common.Task, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(b) == 0 {
+		return nil, fmt.Errorf("data for tree '%s' is zero-length", name)
+	}
 
 	// lines ends up just being splut in reverse. so lines is all the lines in the file, from the
 	// bottom to the top of the file. that's how we want it for constructing the tree further down.
 	splut := bytes.Split(b, []byte("\n"))
-	if len(splut) == 0 {
+	if len(splut) < 2 {
 		return []*common.Task{}, nil
 	}
 
@@ -62,7 +65,7 @@ func (ts *BasicTaskstore) Get(name string) ([]*common.Task, error) {
 		lines = lines[1:]
 		nLines = nLines - 1
 	} else {
-		return nil, fmt.Errorf("error: data for tree '%s' does not end in newline", name)
+		return nil, fmt.Errorf("data for tree '%s' does not end in newline", name)
 	}
 
 	rootNode := common.NewTreeNode("")
