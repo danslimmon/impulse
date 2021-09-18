@@ -23,6 +23,38 @@ func TestTreeNode_AddChild(t *testing.T) {
 	assert.Equal([]string{"a", "b", "c"}, rslt)
 }
 
+func TestTreeNode_InsertChild(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	n := NewTreeNode("")
+	n.AddChild(NewTreeNode("b"))
+	n.AddChild(NewTreeNode("d"))
+	n.InsertChild(0, NewTreeNode("a"))
+	n.InsertChild(2, NewTreeNode("c"))
+	n.InsertChild(4, NewTreeNode("e"))
+
+	rslt := make([]string, 0)
+	for _, ch := range n.Children {
+		rslt = append(rslt, ch.Referent)
+	}
+	assert.Equal([]string{"a", "b", "c", "d", "e"}, rslt)
+}
+
+func TestTreeNode_InsertChild_Empty(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	n := NewTreeNode("")
+	n.InsertChild(0, NewTreeNode("a"))
+
+	rslt := make([]string, 0)
+	for _, ch := range n.Children {
+		rslt = append(rslt, ch.Referent)
+	}
+	assert.Equal([]string{"a"}, rslt)
+}
+
 func TestTreeNode_Walk(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
