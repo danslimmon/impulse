@@ -1,7 +1,7 @@
 package common
 
 type Task struct {
-	RootNode *TreeNode
+	RootNode *TreeNode `json:"tree"`
 }
 
 // Equal determines whether the tasks a and b are equal.

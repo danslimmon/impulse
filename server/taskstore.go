@@ -7,13 +7,11 @@ import (
 	"github.com/danslimmon/impulse/common"
 )
 
-/*
 // Taskstore provides read and write access to Tree structs persisted to the Datastore.
 type Taskstore interface {
 	Get(string) ([]*common.Task, error)
 	Put(string, []*common.Task) error
 }
-*/
 
 // BasicTaskstore is a Taskstore implementation in which trees are stored in a basic,
 // text-editor-centric serialization format.

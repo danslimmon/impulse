@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 )
 
+const DataDir = "/Users/danslimmon/j_workspace/impulse"
+
 // Datastore is an interface to raw marshaled Impulse data.
 //
 // A Datastore implementation is responsible for:

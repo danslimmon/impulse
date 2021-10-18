@@ -18,10 +18,12 @@ var SkipSubtree = errors.New("skip this subtree")
 type TreeWalkFunc func(*TreeNode) error
 
 type TreeNode struct {
-	Parent   *TreeNode
-	Children []*TreeNode
-	Referent string
-	mu       sync.Mutex
+	// Parent field is excluded from JSON to avoid a cycle
+	Parent   *TreeNode   `json:"-"`
+	Children []*TreeNode `json:"children,omitempty"`
+	Referent string      `json:"referent"`
+
+	mu sync.Mutex `json:"-"`
 }
 
 // Depth returns the number of ancestors of n.
