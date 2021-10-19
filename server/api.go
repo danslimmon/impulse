@@ -75,7 +75,7 @@ func (api *ImpulseAPI) Start(addr string) error {
 	router := gin.Default()
 	router.GET("/tasklist/:tasklistname", func(c *gin.Context) {
 		name := c.Param("tasklistname")
-		tasks, err := api.taskstore.Get(name)
+		tasks, err := api.taskstore.GetList(name)
 		if err != nil {
 			c.JSON(404, gin.H{
 				"error": err.Error(),

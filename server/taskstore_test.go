@@ -10,13 +10,13 @@ import (
 	"github.com/danslimmon/impulse/common"
 )
 
-func TestBasicTaskstore_Get(t *testing.T) {
+func TestBasicTaskstore_GetList(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
 	ds := NewFilesystemDatastore("./testdata")
 	ts := NewBasicTaskstore(ds)
-	taskList, err := ts.Get("make_pasta")
+	taskList, err := ts.GetList("make_pasta")
 	assert.Nil(err)
 	rslt := taskList[0]
 
@@ -24,7 +24,7 @@ func TestBasicTaskstore_Get(t *testing.T) {
 	assert.True(rslt.RootNode.Equal(makePasta.RootNode))
 }
 
-func TestBasicTaskstore_Get_Malformed(t *testing.T) {
+func TestBasicTaskstore_GetList_Malformed(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
@@ -38,14 +38,14 @@ func TestBasicTaskstore_Get_Malformed(t *testing.T) {
 	}
 	for _, p := range paths {
 		t.Log(p)
-		taskList, err := ts.Get(p)
+		taskList, err := ts.GetList(p)
 		t.Log(err)
 		assert.Empty(taskList)
 		assert.NotNil(err)
 	}
 }
 
-func TestBasicTaskstore_Put(t *testing.T) {
+func TestBasicTaskstore_PutList(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
@@ -60,13 +60,13 @@ func TestBasicTaskstore_Put(t *testing.T) {
 
 	ds := NewFilesystemDatastore(tempDir)
 	ts := NewBasicTaskstore(ds)
-	err = ts.Put("foo", []*common.Task{
+	err = ts.PutList("foo", []*common.Task{
 		common.NewTask(a),
 		common.NewTask(b),
 	})
 	assert.Nil(err)
 
-	taskList, err := ts.Get("foo")
+	taskList, err := ts.GetList("foo")
 	assert.Nil(err)
 	assert.True(taskList[0].RootNode.Equal(a))
 	assert.True(taskList[1].RootNode.Equal(b))

@@ -9,8 +9,8 @@ import (
 
 // Taskstore provides read and write access to Tree structs persisted to the Datastore.
 type Taskstore interface {
-	Get(string) ([]*common.Task, error)
-	Put(string, []*common.Task) error
+	GetList(string) ([]*common.Task, error)
+	PutList(string, []*common.Task) error
 }
 
 // BasicTaskstore is a Taskstore implementation in which trees are stored in a basic,
@@ -37,7 +37,7 @@ func (ts *BasicTaskstore) parseLine(line []byte) (int, string) {
 }
 
 // Get retrieves the task list with the given name from the persistent Datastore.
-func (ts *BasicTaskstore) Get(name string) ([]*common.Task, error) {
+func (ts *BasicTaskstore) GetList(name string) ([]*common.Task, error) {
 	b, err := ts.datastore.Get(name)
 	if err != nil {
 		return nil, err
@@ -118,7 +118,7 @@ func (ts *BasicTaskstore) Get(name string) ([]*common.Task, error) {
 }
 
 // Put writes taskList to the Datastore as name.
-func (ts *BasicTaskstore) Put(name string, taskList []*common.Task) error {
+func (ts *BasicTaskstore) PutList(name string, taskList []*common.Task) error {
 	b := []byte{}
 	for _, t := range taskList {
 		t.RootNode.WalkFromTop(func(n *common.TreeNode) error {
