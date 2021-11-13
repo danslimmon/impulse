@@ -107,3 +107,9 @@ func (api *ImpulseAPI) Start(addr string) error {
 func (api *ImpulseAPI) Stop() error {
 	return api.server.Shutdown(context.Background())
 }
+
+func NewImpulseAPI(dataDir string) *ImpulseAPI {
+	return &ImpulseAPI{
+		taskstore: NewBasicTaskstore(NewFilesystemDatastore(dataDir)),
+	}
+}
