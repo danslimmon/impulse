@@ -16,7 +16,10 @@ func StartServer(addr, dataDir string) error {
 		return fmt.Errorf("server already started")
 	}
 
-	serverHandle = server.NewImpulseAPI("/Users/danslimmon/i")
+	// got a plan to actually split apart the server and client… until then, this nonsense
+	ds := server.NewFilesystemDatastore("_")
+	ts := server.NewBasicTaskstore(ds)
+	serverHandle = server.NewImpulseAPI(ts)
 	return serverHandle.Start(addr)
 }
 

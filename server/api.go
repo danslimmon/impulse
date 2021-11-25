@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 
@@ -11,14 +12,9 @@ import (
 	"github.com/danslimmon/impulse/common"
 )
 
-type APIResponse struct {
-	Error string `json:"error"`
-}
-
 type GetTaskListResponse struct {
-	APIResponse
-
-	Result []*common.Task `json:"result"`
+	Error  string         `json:"error,omitempty"`
+	Result []*common.Task `json:"result,omitempty"`
 }
 
 func (apiResp *GetTaskListResponse) UnmarshalJSON(b []byte) error {
@@ -77,13 +73,13 @@ func (api *ImpulseAPI) Start(addr string) error {
 		name := c.Param("tasklistname")
 		tasks, err := api.taskstore.GetList(name)
 		if err != nil {
-			c.JSON(404, gin.H{
-				"error": err.Error(),
-			})
+			//@DEBUG
+			fmt.Printf("x-bravo error: %s\n", err.Error())
+			c.JSON(404, GetTaskListResponse{Error: err.Error()})
 		} else {
-			c.JSON(200, gin.H{
-				"result": tasks,
-			})
+			//@DEBUG
+			fmt.Printf("x-bravo no error\n")
+			c.JSON(200, GetTaskListResponse{Result: tasks})
 		}
 	})
 
@@ -108,8 +104,8 @@ func (api *ImpulseAPI) Stop() error {
 	return api.server.Shutdown(context.Background())
 }
 
-func NewImpulseAPI(dataDir string) *ImpulseAPI {
+func NewImpulseAPI(ts Taskstore) *ImpulseAPI {
 	return &ImpulseAPI{
-		taskstore: NewBasicTaskstore(NewFilesystemDatastore(dataDir)),
+		taskstore: ts,
 	}
 }

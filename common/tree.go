@@ -1,6 +1,7 @@
 package common
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -24,6 +25,26 @@ type TreeNode struct {
 	Referent string      `json:"referent"`
 
 	mu sync.Mutex `json:"-"`
+}
+
+// TreeNode needs its own UnmarshalJSON so that .Children gets initialized.
+//
+// Initializing .Parent is done further up the call stack.
+func (n *TreeNode) UnmarshalJSON(b []byte) error {
+	type tmpTreeNode *TreeNode
+	tmp := tmpTreeNode(n)
+	err := json.Unmarshal(b, tmp)
+	if err != nil {
+		return err
+	}
+
+	n.Referent = tmp.Referent
+	if n.Children == nil {
+		n.Children = make([]*TreeNode, 0)
+	} else {
+		copy(n.Children, tmp.Children)
+	}
+	return nil
 }
 
 // Depth returns the number of ancestors of n.
