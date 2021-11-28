@@ -48,7 +48,7 @@ func listenAddr() string {
 	return ap.Get()
 }
 
-func TestImpulseAPI_GetTaskList(t *testing.T) {
+func TestServer_GetTaskList(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
@@ -56,7 +56,7 @@ func TestImpulseAPI_GetTaskList(t *testing.T) {
 		NewFilesystemDatastore("./testdata"),
 	)
 
-	api := &ImpulseAPI{
+	api := &Server{
 		taskstore: ts,
 	}
 	addr := listenAddr()

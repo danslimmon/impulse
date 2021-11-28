@@ -10,13 +10,13 @@ import (
 	"github.com/danslimmon/impulse/server"
 )
 
-// ImpulseAPIClient provides methods for using the Impulse API.
-type ImpulseAPIClient struct {
+// Client provides methods for using the Impulse API.
+type Client struct {
 	addr string
 }
 
 // url returns the full URL to the Impulse API endpoint with the given path.
-func (apiClient *ImpulseAPIClient) url(path string) string {
+func (apiClient *Client) url(path string) string {
 	u := url.URL{
 		Scheme: "http",
 		Host:   apiClient.addr,
@@ -25,7 +25,7 @@ func (apiClient *ImpulseAPIClient) url(path string) string {
 	return u.String()
 }
 
-func (apiClient *ImpulseAPIClient) GetTaskList(listName string) (*server.GetTaskListResponse, error) {
+func (apiClient *Client) GetTaskList(listName string) (*server.GetTaskListResponse, error) {
 	path := fmt.Sprintf("/tasklist/%s", listName)
 	resp, err := http.Get(apiClient.url(path))
 	if err != nil {
@@ -55,9 +55,9 @@ func (apiClient *ImpulseAPIClient) GetTaskList(listName string) (*server.GetTask
 	}
 }
 
-// NewImpulseAPIClient returns a fresh ImpulseAPIClient.
+// NewClient returns a fresh Client.
 //
 // addr is the host:port pair on which the server is listening.
-func NewImpulseAPIClient(addr string) *ImpulseAPIClient {
-	return &ImpulseAPIClient{addr: addr}
+func NewClient(addr string) *Client {
+	return &Client{addr: addr}
 }

@@ -43,13 +43,13 @@ func (apiResp *GetTaskListResponse) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-type ImpulseAPI struct {
+type Server struct {
 	server    *http.Server
 	taskstore Taskstore
 }
 
 // assignTaskstore obtains a default Taskstore implementation if one is not already injected.
-func (api *ImpulseAPI) assignTaskstore() {
+func (api *Server) assignTaskstore() {
 	if api.taskstore != nil {
 		// We already have a Taskstore implementation dependency-injected.
 		return
@@ -60,12 +60,12 @@ func (api *ImpulseAPI) assignTaskstore() {
 	api.taskstore = ts
 }
 
-func (api *ImpulseAPI) listenAndServe(addr string, router http.Handler) {
+func (api *Server) listenAndServe(addr string, router http.Handler) {
 	api.server.ListenAndServe()
 }
 
 // Start starts the Impulse API server, which will listen for requests until Stop is called.
-func (api *ImpulseAPI) Start(addr string) error {
+func (api *Server) Start(addr string) error {
 	api.assignTaskstore()
 
 	router := gin.Default()
@@ -100,12 +100,12 @@ func (api *ImpulseAPI) Start(addr string) error {
 }
 
 // Stop stops the Impulse API server.
-func (api *ImpulseAPI) Stop() error {
+func (api *Server) Stop() error {
 	return api.server.Shutdown(context.Background())
 }
 
-func NewImpulseAPI(ts Taskstore) *ImpulseAPI {
-	return &ImpulseAPI{
+func NewServer(ts Taskstore) *Server {
+	return &Server{
 		taskstore: ts,
 	}
 }

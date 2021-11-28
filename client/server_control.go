@@ -6,7 +6,7 @@ import (
 	"github.com/danslimmon/impulse/server"
 )
 
-var serverHandle *server.ImpulseAPI
+var serverHandle *server.Server
 
 // StartServer starts an impulse server listening on the given IP:port pair.
 //
@@ -19,7 +19,7 @@ func StartServer(addr, dataDir string) error {
 	// got a plan to actually split apart the server and client… until then, this nonsense
 	ds := server.NewFilesystemDatastore("_")
 	ts := server.NewBasicTaskstore(ds)
-	serverHandle = server.NewImpulseAPI(ts)
+	serverHandle = server.NewServer(ts)
 	return serverHandle.Start(addr)
 }
 

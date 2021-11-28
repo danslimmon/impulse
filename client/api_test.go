@@ -41,18 +41,18 @@ func copyMakePastaDir() (string, func()) {
 //
 // cleanup is a function that should be called when the test is done with the returned server and
 // client.
-func makePastaPair() (*server.ImpulseAPI, *ImpulseAPIClient, func()) {
+func makePastaPair() (*server.Server, *Client, func()) {
 	dataDir, copyCleanup := copyMakePastaDir()
 
 	addr := "127.0.0.1:30272"
 	ds := server.NewFilesystemDatastore(dataDir)
 	ts := server.NewBasicTaskstore(ds)
-	apiServer := server.NewImpulseAPI(ts)
+	apiServer := server.NewServer(ts)
 	if apiServer.Start(addr) != nil {
 		panic("failed to start test server on " + addr)
 	}
 
-	apiClient := NewImpulseAPIClient(addr)
+	apiClient := NewClient(addr)
 
 	cleanup := func() {
 		err := apiServer.Stop()
@@ -65,7 +65,7 @@ func makePastaPair() (*server.ImpulseAPI, *ImpulseAPIClient, func()) {
 	return apiServer, apiClient, cleanup
 }
 
-func Test_ImpulseAPIClient_GetTaskList(t *testing.T) {
+func Test_Client_GetTaskList(t *testing.T) {
 	// no t.Parallel() so we don't have to worry about giving out unique server ports
 	assert := assert.New(t)
 
@@ -76,7 +76,7 @@ func Test_ImpulseAPIClient_GetTaskList(t *testing.T) {
 	assert.Equal(common.MakePasta(), resp.Result)
 }
 
-func Test_ImpulseAPIClient_GetTaskList_Nonexistent(t *testing.T) {
+func Test_Client_GetTaskList_Nonexistent(t *testing.T) {
 	// no t.Parallel() so we don't have to worry about giving out unique server ports
 	assert := assert.New(t)
 
