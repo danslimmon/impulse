@@ -65,7 +65,7 @@ func makePastaPair() (*server.ImpulseAPI, *ImpulseAPIClient, func()) {
 	return apiServer, apiClient, cleanup
 }
 
-func Test_ImpulseAPIClient_GetTaskListResponse(t *testing.T) {
+func Test_ImpulseAPIClient_GetTaskList(t *testing.T) {
 	// no t.Parallel() so we don't have to worry about giving out unique server ports
 	assert := assert.New(t)
 
@@ -74,4 +74,14 @@ func Test_ImpulseAPIClient_GetTaskListResponse(t *testing.T) {
 	resp, err := client.GetTaskList("_")
 	assert.Nil(err)
 	assert.Equal(common.MakePasta(), resp.Result)
+}
+
+func Test_ImpulseAPIClient_GetTaskList_Nonexistent(t *testing.T) {
+	// no t.Parallel() so we don't have to worry about giving out unique server ports
+	assert := assert.New(t)
+
+	_, client, cleanup := makePastaPair()
+	defer cleanup()
+	_, err := client.GetTaskList("nonexistent_task_list")
+	assert.NotNil(err)
 }
