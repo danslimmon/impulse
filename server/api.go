@@ -73,12 +73,8 @@ func (api *Server) Start(addr string) error {
 		name := c.Param("tasklistname")
 		tasks, err := api.taskstore.GetList(name)
 		if err != nil {
-			//@DEBUG
-			fmt.Printf("x-bravo error: %s\n", err.Error())
 			c.JSON(404, GetTaskListResponse{Error: err.Error()})
 		} else {
-			//@DEBUG
-			fmt.Printf("x-bravo no error\n")
 			c.JSON(200, GetTaskListResponse{Result: tasks})
 		}
 	})
