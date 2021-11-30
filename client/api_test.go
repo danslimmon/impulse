@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"io/ioutil"
@@ -48,8 +48,8 @@ func makePastaPair() (*server.Server, *Client, func()) {
 	ds := server.NewFilesystemDatastore(dataDir)
 	ts := server.NewBasicTaskstore(ds)
 	apiServer := server.NewServer(ts)
-	if apiServer.Start(addr) != nil {
-		panic("failed to start test server on " + addr)
+	if err := apiServer.Start(addr); err != nil {
+		panic("failed to start test server on " + addr + ": " + err.Error())
 	}
 
 	apiClient := NewClient(addr)
