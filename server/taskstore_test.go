@@ -14,14 +14,35 @@ func TestBasicTaskstore_GetList(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
-	ds := NewFilesystemDatastore("./testdata")
-	ts := NewBasicTaskstore(ds)
-	taskList, err := ts.GetList("make_pasta")
-	assert.Nil(err)
-	rslt := taskList[0]
+	type testCase struct {
+		ListName string
+		Exp      []*common.Task
+	}
 
-	makePasta := common.MakePasta()[0]
-	assert.True(rslt.RootNode.Equal(makePasta.RootNode))
+	testCases := []testCase{
+		testCase{
+			ListName: "make_pasta",
+			Exp:      common.MakePasta(),
+		},
+		testCase{
+			ListName: "multiple_nested",
+			Exp:      common.MultipleNested(),
+		},
+	}
+
+	for _, tc := range testCases {
+		ds := NewFilesystemDatastore("./testdata")
+		ts := NewBasicTaskstore(ds)
+		rslt, err := ts.GetList(tc.ListName)
+		assert.Nil(err)
+		assert.Equal(len(tc.Exp), len(rslt))
+		for i := range tc.Exp {
+			if i > len(rslt)-1 {
+				break
+			}
+			assert.Equal(tc.Exp[i], rslt[i])
+		}
+	}
 }
 
 func TestBasicTaskstore_GetList_Malformed(t *testing.T) {

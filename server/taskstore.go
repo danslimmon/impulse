@@ -83,17 +83,14 @@ func (ts *BasicTaskstore) GetList(name string) ([]*common.Task, error) {
 		if deltaIndent == 1 {
 			// this is a child of the previous node
 			prevNode.AddChild(newNode)
-		} else if deltaIndent == 0 {
-			// this is a sibling of the previous node. it goes _before_ the previous node parsed.
-			prevNode.Parent.InsertChild(0, newNode)
-		} else if deltaIndent < 0 {
+		} else if deltaIndent <= 0 {
 			// we've gone back up to an ancestor node. figure out which one and add the child there
 			// (again, before the previous node parsed)
 			//
 			// ascend the tree by however much it takes to get back to the ancestor of node that
 			// newNode is a child of
-			ancestorNode := prevNode
-			for i := 0; i < -deltaIndent-1; i++ {
+			ancestorNode := prevNode.Parent
+			for ancestorNode.Depth() != prevNode.Depth()+deltaIndent-1 {
 				ancestorNode = ancestorNode.Parent
 			}
 			ancestorNode.InsertChild(0, newNode)
@@ -112,6 +109,7 @@ func (ts *BasicTaskstore) GetList(name string) ([]*common.Task, error) {
 	// Now we take all the children of rootNode and load them into the list to be returned.
 	rslt := make([]*common.Task, 0)
 	for _, n := range rootNode.Children {
+		n.Parent = nil
 		rslt = append(rslt, common.NewTask(n))
 	}
 	return rslt, nil

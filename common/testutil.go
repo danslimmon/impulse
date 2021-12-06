@@ -1,6 +1,6 @@
 package common
 
-// Returns a "make pasta" task.
+// Returns a "make pasta" tasklist.
 //
 // Should be identical to the contents of server/testdata/make_pasta
 //
@@ -26,4 +26,30 @@ func MakePasta() []*Task {
 	makePasta.AddChild(NewTreeNode("drain pasta"))
 
 	return []*Task{NewTask(makePasta)}
+}
+
+// Returns a "multiple nested" tasklist.
+//
+// Should be identical to the contents of server/testdata/multiple_nested
+//
+//         subsubtask 0
+//     subtask 0
+// task 0
+//     subtask 1
+// task 1
+func MultipleNested() []*Task {
+	task0 := NewTreeNode("task 0")
+	subtask0 := NewTreeNode("subtask 0")
+	subsubtask0 := NewTreeNode("subsubtask 0")
+	subtask0.AddChild(subsubtask0)
+	task0.AddChild(subtask0)
+
+	task1 := NewTreeNode("task 1")
+	subtask1 := NewTreeNode("subtask 1")
+	task1.AddChild(subtask1)
+
+	return []*Task{
+		NewTask(task0),
+		NewTask(task1),
+	}
 }

@@ -153,7 +153,7 @@ func (n *TreeNode) WalkFromTop(fn TreeWalkFunc) error {
 // String returns a string representation of n, for use in logging and debugging.
 //
 // One should not use the return value of String() to compare TreeNodes. Instead, one should use
-// Equal() and/or write a custom TreeWalkFunc. String() is only for convenience.
+// Equal() and/or write a custom TreeWalkFunc. String() is only for convenience in development.
 func (n *TreeNode) String() string {
 	var b strings.Builder
 	n.Walk(func(m *TreeNode) error {
