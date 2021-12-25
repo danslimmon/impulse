@@ -25,19 +25,22 @@ func main() {
 	}
 
 	apiClient := client.NewClient(addr)
-	resp, err := apiClient.GetTaskList("_")
-	if err != nil {
-		panic("failed to get task list _: " + err.Error())
-	}
+	switch os.Args[1] {
+	case "show":
+		resp, err := apiClient.GetTaskList(os.Args[2])
+		if err != nil {
+			panic(fmt.Sprintf("failed to get task list `%s`: %s", os.Args[2], err.Error()))
+		}
 
-	for _, t := range resp.Result {
-		t.RootNode.WalkFromTop(func(n *common.TreeNode) error {
-			fmt.Printf(
-				"%s%v\n",
-				strings.Repeat("    ", n.Depth()),
-				n.Referent,
-			)
-			return nil
-		})
+		for _, t := range resp.Result {
+			t.RootNode.WalkFromTop(func(n *common.TreeNode) error {
+				fmt.Printf(
+					"%s%v\n",
+					strings.Repeat("    ", n.Depth()),
+					n.Referent,
+				)
+				return nil
+			})
+		}
 	}
 }
