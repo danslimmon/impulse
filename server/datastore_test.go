@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,7 +17,10 @@ import (
 func cloneTestData() (string, func()) {
 	tempDir, err := ioutil.TempDir("", "impulse_*")
 	if err != nil {
-		panic("unable to clone test data to a tempdir: " + err.Error())
+		panic("unable to create tempdir for testdata clone: " + err.Error())
+	}
+	if err := exec.Command("cp", "-rp", "./testdata/", tempDir+"/").Run(); err != nil {
+		panic("unable to clone testdata to tempdir: " + err.Error())
 	}
 	return tempDir, func() {
 		os.RemoveAll(tempDir)

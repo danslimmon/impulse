@@ -83,7 +83,10 @@ func (api *Server) Start(addr string) error {
 		}
 	})
 
-	router.POST("/archive_line/:line_id", func(c *gin.Context) {
+	// should this be a POST or something? probably. i mean, we will need to redesign the API at
+	// some point. this project is small enough yet that i'm not worrying about how silly the API
+	// is.
+	router.GET("/archive_line/:line_id", func(c *gin.Context) {
 		lineId := common.LineID(c.Param("line_id"))
 		err := api.taskstore.ArchiveLine(lineId)
 		if err != nil {

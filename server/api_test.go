@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"regexp"
 	"sync"
 	"testing"
 
@@ -124,4 +126,40 @@ func TestGetTaskListResponse_UnmarshalJSON_Error(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal("oh no there was an error", apiResp.Error)
 	assert.Nil(apiResp.Result)
+}
+
+func TestServer_ArchiveLine(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	//@DEBUG
+	ds, _ := newFSDatastoreWithTestdata()
+	//defer cleanup()
+	ts := NewBasicTaskstore(ds)
+
+	api := &Server{
+		taskstore: ts,
+	}
+	addr := listenAddr()
+	err := api.Start(addr)
+	defer api.Stop()
+	assert.Nil(err)
+
+	resp, err := http.Get(
+		"http://" + addr + "/archive_line/" + url.PathEscape(string(
+			common.GetLineID("make_pasta", "\t\tput water in pot"),
+		)),
+	)
+	assert.Nil(err)
+	body, err := io.ReadAll(resp.Body)
+	assert.Nil(err)
+
+	apiResp := new(ArchiveLineResponse)
+	err = json.Unmarshal(body, apiResp)
+	assert.Nil(err)
+	assert.Equal("", apiResp.Error)
+
+	b, err := ds.Get("history")
+	assert.Nil(err)
+	assert.True(regexp.MustCompile("^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9] \t\tput water in pot$").Match(b))
 }

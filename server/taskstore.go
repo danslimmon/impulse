@@ -43,13 +43,12 @@ func (ts *BasicTaskstore) parseLine(line []byte) (int, string) {
 //
 // The line number returned is zero-indexed (the first line of the file is line 0).
 func (ts *BasicTaskstore) derefLineId(lineId common.LineID) (string, int, error) {
-	parts := strings.SplitN(string(lineId), "/", 2)
+	parts := strings.SplitN(string(lineId), ":", 2)
 	if len(parts) != 2 {
 		return "", 0, fmt.Errorf("malformatted line ID `%s`", string(lineId))
 	}
 
 	listName := parts[0]
-	lineText := parts[1]
 	b, err := ts.datastore.Get(listName)
 	if err != nil {
 		return "", 0, err
@@ -58,7 +57,7 @@ func (ts *BasicTaskstore) derefLineId(lineId common.LineID) (string, int, error)
 	lines := bytes.Split(b, []byte("\n"))
 	lineNo := -1
 	for n, line := range lines {
-		if string(line) == lineText {
+		if common.GetLineID(listName, string(line)) == lineId {
 			lineNo = n
 		}
 	}
