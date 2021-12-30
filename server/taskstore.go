@@ -3,6 +3,8 @@ package server
 import (
 	"bytes"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/danslimmon/impulse/common"
 )
@@ -11,6 +13,7 @@ import (
 type Taskstore interface {
 	GetList(string) ([]*common.Task, error)
 	PutList(string, []*common.Task) error
+	ArchiveLine(common.LineID) error
 }
 
 // BasicTaskstore is a Taskstore implementation in which trees are stored in a basic,
@@ -34,6 +37,36 @@ func (ts *BasicTaskstore) parseLine(line []byte) (int, string) {
 	textBytes := bytes.TrimLeft(line, "\t")
 	indent := len(line) - len(textBytes)
 	return indent, string(textBytes)
+}
+
+// derefLineId takes a line ID and determines the corresponding list name and line number.
+//
+// The line number returned is zero-indexed (the first line of the file is line 0).
+func (ts *BasicTaskstore) derefLineId(lineId common.LineID) (string, int, error) {
+	parts := strings.SplitN(string(lineId), "/", 2)
+	if len(parts) != 2 {
+		return "", 0, fmt.Errorf("malformatted line ID `%s`", string(lineId))
+	}
+
+	listName := parts[0]
+	lineText := parts[1]
+	b, err := ts.datastore.Get(listName)
+	if err != nil {
+		return "", 0, err
+	}
+
+	lines := bytes.Split(b, []byte("\n"))
+	lineNo := -1
+	for n, line := range lines {
+		if string(line) == lineText {
+			lineNo = n
+		}
+	}
+	if lineNo == -1 {
+		return "", 0, fmt.Errorf("no line with ID `%s`", string(lineId))
+	}
+
+	return listName, lineNo, nil
 }
 
 // Get retrieves the task list with the given name from the persistent Datastore.
@@ -127,6 +160,47 @@ func (ts *BasicTaskstore) PutList(name string, taskList []*common.Task) error {
 		})
 	}
 	return ts.datastore.Put(name, b)
+}
+
+// historyLine returns a line for the history file based on the given line from an impulse file.
+//
+// History lines are of the form:
+//
+//     2021-12-30T19:24:48 [full contents of b, including any leading whitespace]
+func (ts *BasicTaskstore) historyLine(b []byte) []byte {
+	now := time.Now()
+	// make sure this is UTC before using it ^
+	timestamp := now.Format("2006-01-02T15:04:05")
+	return []byte(fmt.Sprintf("%s %s", timestamp, b))
+}
+
+// ArchiveLine archives the line identified by lineId.
+//
+// lineId may refer either to a subtask or a task proper.
+func (ts *BasicTaskstore) ArchiveLine(lineId common.LineID) error {
+	listName, lineNo, err := ts.derefLineId(lineId)
+	if err != nil {
+		return err
+	}
+
+	b, err := ts.datastore.Get(listName)
+	if err != nil {
+		return err
+	}
+
+	lines := bytes.Split(b, []byte("\n"))
+	// Will panic on index-out-of-range, but it should. That means there's a bug in derefLineId.
+	removedLine := make([]byte, len(lines[lineNo]))
+	copy(removedLine, lines[lineNo])
+
+	lines = append(lines[0:lineNo], lines[lineNo+1:]...)
+	// Add empty line so that file will end with a newline
+	lines = append(lines, []byte{})
+	b = bytes.Join(lines, []byte("\n"))
+
+	ts.datastore.Append("history", ts.historyLine(removedLine))
+
+	return ts.datastore.Put(listName, b)
 }
 
 // NewBasicTaskstore returns a BasicTaskstore with the given underlying datastore.

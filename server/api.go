@@ -16,6 +16,10 @@ type GetTaskListResponse struct {
 	Result []*common.Task `json:"result,omitempty"`
 }
 
+type ArchiveLineResponse struct {
+	Error string `json:"error,omitempty"`
+}
+
 func (apiResp *GetTaskListResponse) UnmarshalJSON(b []byte) error {
 	// Declare a local type so that we don't get infinite recursion when we call json.Unmarshal
 	type gtlr GetTaskListResponse
@@ -68,6 +72,7 @@ func (api *Server) Start(addr string) error {
 	api.assignTaskstore()
 
 	router := gin.Default()
+
 	router.GET("/tasklist/:tasklistname", func(c *gin.Context) {
 		name := c.Param("tasklistname")
 		tasks, err := api.taskstore.GetList(name)
@@ -75,6 +80,16 @@ func (api *Server) Start(addr string) error {
 			c.JSON(404, GetTaskListResponse{Error: err.Error()})
 		} else {
 			c.JSON(200, GetTaskListResponse{Result: tasks})
+		}
+	})
+
+	router.POST("/archive_line/:line_id", func(c *gin.Context) {
+		lineId := common.LineID(c.Param("line_id"))
+		err := api.taskstore.ArchiveLine(lineId)
+		if err != nil {
+			c.JSON(404, ArchiveLineResponse{Error: err.Error()})
+		} else {
+			c.JSON(200, ArchiveLineResponse{})
 		}
 	})
 

@@ -1,5 +1,7 @@
 package common
 
+type LineID string
+
 type Task struct {
 	RootNode *TreeNode `json:"tree"`
 }

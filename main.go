@@ -42,5 +42,7 @@ func main() {
 				return nil
 			})
 		}
+	case "archive":
+		resp, err := apiClient.ArchiveLine(os.Args[2], os.Args[3])
 	}
 }
