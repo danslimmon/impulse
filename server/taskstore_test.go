@@ -31,34 +31,31 @@ func TestBasicTaskstore_derefLineId(t *testing.T) {
 			ExpLineNo:   3,
 			ExpErr:      false,
 		},
-		//@DEBUG
-		/*
-			testCase{
-				LineId:      common.GetLineID("multiple_nested", "\t\tsubsubtask 0"),
-				ExpListName: "multiple_nested",
-				ExpLineNo:   0,
-				ExpErr:      false,
-			},
-			testCase{
-				LineId:      common.GetLineID("multiple_nested", "task 1"),
-				ExpListName: "multiple_nested",
-				ExpLineNo:   4,
-				ExpErr:      false,
-			},
-			// sad path
-			testCase{
-				LineId: common.LineID("malformed line ID (no slash)"),
-				ExpErr: true,
-			},
-			testCase{
-				LineId: common.GetLineID("no_such_file", "blah blah"),
-				ExpErr: true,
-			},
-			testCase{
-				LineId: common.GetLineID("make_pasta", "line that doesn't exist"),
-				ExpErr: true,
-			},
-		*/
+		testCase{
+			LineId:      common.GetLineID("multiple_nested", "\t\tsubsubtask 0"),
+			ExpListName: "multiple_nested",
+			ExpLineNo:   0,
+			ExpErr:      false,
+		},
+		testCase{
+			LineId:      common.GetLineID("multiple_nested", "task 1"),
+			ExpListName: "multiple_nested",
+			ExpLineNo:   4,
+			ExpErr:      false,
+		},
+		// sad path
+		testCase{
+			LineId: common.LineID("malformed line ID (no slash)"),
+			ExpErr: true,
+		},
+		testCase{
+			LineId: common.GetLineID("no_such_file", "blah blah"),
+			ExpErr: true,
+		},
+		testCase{
+			LineId: common.GetLineID("make_pasta", "line that doesn't exist"),
+			ExpErr: true,
+		},
 	}
 
 	for _, tc := range testCases {

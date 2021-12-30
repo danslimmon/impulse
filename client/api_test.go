@@ -85,3 +85,23 @@ func Test_Client_GetTaskList_Nonexistent(t *testing.T) {
 	_, err := client.GetTaskList("nonexistent_task_list")
 	assert.NotNil(err)
 }
+
+func Test_Client_ArchiveLine(t *testing.T) {
+	// no t.Parallel() so we don't have to worry about giving out unique server ports
+	assert := assert.New(t)
+
+	_, client, cleanup := makePastaPair()
+	defer cleanup()
+	_, err := client.ArchiveLine(common.GetLineID("_", "\t\tput water in pot"))
+	assert.Nil(err)
+}
+
+func Test_Client_ArchiveLine_Error(t *testing.T) {
+	// no t.Parallel() so we don't have to worry about giving out unique server ports
+	assert := assert.New(t)
+
+	_, client, cleanup := makePastaPair()
+	defer cleanup()
+	_, err := client.ArchiveLine("malformed_task_id")
+	assert.NotNil(err)
+}

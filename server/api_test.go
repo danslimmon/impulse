@@ -132,9 +132,8 @@ func TestServer_ArchiveLine(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
-	//@DEBUG
-	ds, _ := newFSDatastoreWithTestdata()
-	//defer cleanup()
+	ds, cleanup := newFSDatastoreWithTestdata()
+	defer cleanup()
 	ts := NewBasicTaskstore(ds)
 
 	api := &Server{
@@ -162,4 +161,74 @@ func TestServer_ArchiveLine(t *testing.T) {
 	b, err := ds.Get("history")
 	assert.Nil(err)
 	assert.True(regexp.MustCompile("^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9] \t\tput water in pot$").Match(b))
+}
+
+func TestServer_ArchiveLine_LineMissing(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	ds, cleanup := newFSDatastoreWithTestdata()
+	defer cleanup()
+	ts := NewBasicTaskstore(ds)
+
+	api := &Server{
+		taskstore: ts,
+	}
+	addr := listenAddr()
+	err := api.Start(addr)
+	defer api.Stop()
+	assert.Nil(err)
+
+	resp, err := http.Get(
+		"http://" + addr + "/archive_line/" + url.PathEscape(string(
+			common.GetLineID("make_pasta", "flooptyboop"),
+		)),
+	)
+	// Non-200 response does not cause an error on http.Get
+	assert.Nil(err)
+	assert.Equal(404, resp.StatusCode)
+
+	body, err := io.ReadAll(resp.Body)
+	assert.Nil(err)
+
+	apiResp := new(ArchiveLineResponse)
+	err = json.Unmarshal(body, apiResp)
+	assert.Nil(err)
+	assert.NotNil(apiResp.Error)
+	assert.NotEqual("", apiResp.Error)
+}
+
+func TestServer_ArchiveLine_FileMissing(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	ds, cleanup := newFSDatastoreWithTestdata()
+	defer cleanup()
+	ts := NewBasicTaskstore(ds)
+
+	api := &Server{
+		taskstore: ts,
+	}
+	addr := listenAddr()
+	err := api.Start(addr)
+	defer api.Stop()
+	assert.Nil(err)
+
+	resp, err := http.Get(
+		"http://" + addr + "/archive_line/" + url.PathEscape(string(
+			common.GetLineID("nonexistent_file", "flooptyboop"),
+		)),
+	)
+	// Non-200 response does not cause an error on http.Get
+	assert.Nil(err)
+	assert.Equal(404, resp.StatusCode)
+
+	body, err := io.ReadAll(resp.Body)
+	assert.Nil(err)
+
+	apiResp := new(ArchiveLineResponse)
+	err = json.Unmarshal(body, apiResp)
+	assert.Nil(err)
+	assert.NotNil(apiResp.Error)
+	assert.NotEqual("", apiResp.Error)
 }

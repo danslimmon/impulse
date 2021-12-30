@@ -43,6 +43,10 @@ func main() {
 			})
 		}
 	case "archive":
-		resp, err := apiClient.ArchiveLine(os.Args[2], os.Args[3])
+		lineID := common.GetLineID(os.Args[2], os.Args[3])
+		_, err := apiClient.ArchiveLine(lineID)
+		if err != nil {
+			panic(fmt.Sprintf("failed to archive line with ID `%s`: %s", os.Args[2], err.Error()))
+		}
 	}
 }

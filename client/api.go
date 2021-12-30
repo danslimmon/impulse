@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/danslimmon/impulse/common"
 	"github.com/danslimmon/impulse/server"
 )
 
@@ -51,7 +52,37 @@ func (apiClient *Client) GetTaskList(listName string) (*server.GetTaskListRespon
 		return respObj, nil
 	} else {
 		fmt.Printf("DEBUG: server response: '%s'", string(b))
-		return respObj, fmt.Errorf("error: response code 404; body in logs")
+		return respObj, fmt.Errorf("error: response code; body in logs")
+	}
+}
+
+func (apiClient *Client) ArchiveLine(lineId common.LineID) (*server.ArchiveLineResponse, error) {
+	path := fmt.Sprintf("/archive_line/%s", url.PathEscape(string(lineId)))
+	resp, err := http.Get(apiClient.url(path))
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	respObj := new(server.ArchiveLineResponse)
+	err = json.Unmarshal(b, respObj)
+	if err != nil {
+		return nil, err
+	}
+	if respObj.Error != "" {
+		return nil, fmt.Errorf("Error response from server: %s", respObj.Error)
+	}
+
+	if resp.StatusCode == 200 {
+		return respObj, nil
+	} else {
+		fmt.Printf("DEBUG: server response: '%s'", string(b))
+		return respObj, fmt.Errorf("error: response code; body in logs")
 	}
 }
 
