@@ -1,9 +1,6 @@
 package server
 
 import (
-	"io/ioutil"
-	"os"
-	"os/exec"
 	"regexp"
 	"testing"
 
@@ -11,6 +8,16 @@ import (
 
 	"github.com/danslimmon/impulse/common"
 )
+
+// newBasicTaskstoreWithTestdata returns a BasicTaskstore based on a clone of the server/testdata
+// directory in a tempdir.
+//
+// newBasicTaskstoreWithTestdata also returns a function to call when the test is over. Calling this
+// function will remove the temporary directory.
+func newBasicTaskstoreWithTestdata() (*BasicTaskstore, func()) {
+	ds, cleanup := newFSDatastoreWithTestdata()
+	return NewBasicTaskstore(ds), cleanup
+}
 
 func TestBasicTaskstore_derefLineId(t *testing.T) {
 	t.Parallel()
@@ -137,13 +144,10 @@ func TestBasicTaskstore_PutList(t *testing.T) {
 	a.AddChild(common.NewTreeNode("yankee"))
 	b := common.NewTreeNode("bravo")
 
-	tempDir, err := ioutil.TempDir("", "impulse_*")
-	defer os.RemoveAll(tempDir)
-	assert.Nil(err)
+	ts, cleanup := newBasicTaskstoreWithTestdata()
+	defer cleanup()
 
-	ds := NewFilesystemDatastore(tempDir)
-	ts := NewBasicTaskstore(ds)
-	err = ts.PutList("foo", []*common.Task{
+	err := ts.PutList("foo", []*common.Task{
 		common.NewTask(a),
 		common.NewTask(b),
 	})
@@ -160,17 +164,11 @@ func TestBasicTaskstore_ArchiveLine_Subtask(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
-	tempDir, err := ioutil.TempDir("", "impulse_*")
-	if err := exec.Command("cp", "-rp", "./testdata/", tempDir+"/").Run(); err != nil {
-		panic(err.Error())
-	}
-	defer os.RemoveAll(tempDir)
-	assert.Nil(err)
-
-	ds := NewFilesystemDatastore(tempDir)
+	ds, cleanup := newFSDatastoreWithTestdata()
 	ts := NewBasicTaskstore(ds)
+	defer cleanup()
 
-	err = ts.ArchiveLine(common.GetLineID("make_pasta", "\t\tput water in pot"))
+	err := ts.ArchiveLine(common.GetLineID("make_pasta", "\t\tput water in pot"))
 	assert.Nil(err)
 
 	// make sure that the archive operation didn't cause malformation of the list file
@@ -193,17 +191,11 @@ func TestBasicTaskstore_ArchiveLine_Task(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
-	tempDir, err := ioutil.TempDir("", "impulse_*")
-	if err := exec.Command("cp", "-rp", "./testdata/", tempDir+"/").Run(); err != nil {
-		panic(err.Error())
-	}
-	defer os.RemoveAll(tempDir)
-	assert.Nil(err)
-
-	ds := NewFilesystemDatastore(tempDir)
+	ds, cleanup := newFSDatastoreWithTestdata()
 	ts := NewBasicTaskstore(ds)
+	defer cleanup()
 
-	err = ts.ArchiveLine(common.GetLineID("make_pasta", "make pasta"))
+	err := ts.ArchiveLine(common.GetLineID("make_pasta", "make pasta"))
 	assert.Nil(err)
 
 	// make sure that the archive operation didn't cause malformation of the list file

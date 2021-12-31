@@ -167,9 +167,8 @@ func TestServer_ArchiveLine_LineMissing(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
-	ds, cleanup := newFSDatastoreWithTestdata()
+	ts, cleanup := newBasicTaskstoreWithTestdata()
 	defer cleanup()
-	ts := NewBasicTaskstore(ds)
 
 	api := &Server{
 		taskstore: ts,
@@ -202,9 +201,8 @@ func TestServer_ArchiveLine_FileMissing(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
-	ds, cleanup := newFSDatastoreWithTestdata()
+	ts, cleanup := newBasicTaskstoreWithTestdata()
 	defer cleanup()
-	ts := NewBasicTaskstore(ds)
 
 	api := &Server{
 		taskstore: ts,
