@@ -13,6 +13,7 @@ import (
 type Taskstore interface {
 	GetList(string) ([]*common.Task, error)
 	PutList(string, []*common.Task) error
+	InsertTask(common.LineID, *common.Task) error
 	ArchiveLine(common.LineID) error
 }
 
@@ -49,6 +50,11 @@ func (ts *BasicTaskstore) derefLineId(lineId common.LineID) (string, int, error)
 	}
 
 	listName := parts[0]
+
+	if parts[1] == "0" {
+		return listName, 0, nil
+	}
+
 	b, err := ts.datastore.Get(listName)
 	if err != nil {
 		return "", 0, err
@@ -159,6 +165,36 @@ func (ts *BasicTaskstore) PutList(name string, taskList []*common.Task) error {
 		})
 	}
 	return ts.datastore.Put(name, b)
+}
+
+// InsertTask inserts the given task after the given position.
+//
+// See common.LineID docs for information about how position is interpreted.
+func (ts *BasicTaskstore) InsertTask(lineId common.LineID, task *common.Task) error {
+	listName, lineNo, err := ts.derefLineId(lineId)
+
+	taskList, err := ts.GetList(listName)
+	if err != nil {
+		return err
+	}
+
+	if lineNo == 0 {
+		taskList = append([]*common.Task{task}, taskList...)
+		return ts.PutList(listName, taskList)
+	}
+
+	for i := range taskList {
+		if common.GetLineID(listName, taskList[i].RootNode.Referent) == lineId {
+			if i+1 == len(taskList) {
+				return ts.PutList(listName, append(taskList, task))
+			}
+			taskList = append(taskList[:i+1], taskList[i:]...)
+			taskList[i] = task
+			return ts.PutList(listName, taskList)
+		}
+	}
+
+	return fmt.Errorf("no line exists with ID '%s'", lineId)
 }
 
 // historyLine returns a line for the history file based on the given line from an impulse file.

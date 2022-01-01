@@ -50,6 +50,12 @@ func TestBasicTaskstore_derefLineId(t *testing.T) {
 			ExpLineNo:   4,
 			ExpErr:      false,
 		},
+		testCase{
+			LineId:      common.LineID("multiple_nested:0"),
+			ExpListName: "multiple_nested",
+			ExpLineNo:   0,
+			ExpErr:      false,
+		},
 		// sad path
 		testCase{
 			LineId: common.LineID("malformed line ID (no slash)"),
@@ -157,6 +163,35 @@ func TestBasicTaskstore_PutList(t *testing.T) {
 	assert.Nil(err)
 	assert.True(taskList[0].RootNode.Equal(a))
 	assert.True(taskList[1].RootNode.Equal(b))
+}
+
+func TestBasicTaskstore_InsertTask(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	a := common.NewTreeNode("alpha")
+	a.AddChild(common.NewTreeNode("zulu"))
+	a.AddChild(common.NewTreeNode("yankee"))
+	b := common.NewTreeNode("bravo")
+
+	ts, cleanup := newBasicTaskstoreWithTestdata()
+	defer cleanup()
+
+	// Insert alpha at the top of make_pasta
+	err := ts.InsertTask(common.LineID("make_pasta:0"), common.NewTask(a))
+	assert.Nil(err)
+
+	taskList, err := ts.GetList("make_pasta")
+	assert.Nil(err)
+	assert.True(a.Equal(taskList[0].RootNode))
+
+	// Insert bravo at the bottom of multiple_nested
+	err = ts.InsertTask(common.GetLineID("multiple_nested", "task 1"), common.NewTask(b))
+	assert.Nil(err)
+
+	taskList, err = ts.GetList("multiple_nested")
+	assert.Nil(err)
+	assert.True(b.Equal(taskList[2].RootNode))
 }
 
 // Tests that ArchiveLine works when given an ID that corresponds to a subtask.
