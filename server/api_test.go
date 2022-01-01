@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -229,4 +230,46 @@ func TestServer_ArchiveLine_FileMissing(t *testing.T) {
 	assert.Nil(err)
 	assert.NotNil(apiResp.Error)
 	assert.NotEqual("", apiResp.Error)
+}
+
+func TestServer_InsertTask(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	ds, cleanup := newFSDatastoreWithTestdata()
+	defer cleanup()
+	ts := NewBasicTaskstore(ds)
+
+	api := &Server{
+		taskstore: ts,
+	}
+	addr := listenAddr()
+	err := api.Start(addr)
+	defer api.Stop()
+	assert.Nil(err)
+
+	reqObj := &InsertTaskRequest{
+		LineID: common.LineID("make_pasta:0"),
+		Task:   common.NewTask(common.NewTreeNode("alpha")),
+	}
+	b, err := json.Marshal(reqObj)
+	assert.Nil(err)
+
+	resp, err := http.Post(
+		"http://"+addr+"/insert_task/",
+		"application/json",
+		bytes.NewReader(b),
+	)
+	assert.Nil(err)
+	body, err := io.ReadAll(resp.Body)
+	assert.Nil(err)
+
+	apiResp := new(InsertTaskResponse)
+	err = json.Unmarshal(body, apiResp)
+	assert.Nil(err)
+	assert.Equal("", apiResp.Error)
+
+	newFileBytes, err := ds.Get("make_pasta")
+	assert.Nil(err)
+	assert.True(regexp.MustCompile("alpha").Match(newFileBytes))
 }

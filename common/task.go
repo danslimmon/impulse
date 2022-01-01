@@ -7,6 +7,15 @@ import (
 	"strings"
 )
 
+// LineID represents a line in the data file.
+//
+// This is an abstraction leak. API clients shouldn't have to know about "lines", since those are an
+// implementation detail of the storage backend. But, it gets us off the ground for now.
+//
+// A Line ID is composed of two parts, separated by a colon. The first part is the name of a task
+// list, e.g. `make_pasta`. The second part is either 0 (which indicates the top line of the file),
+// or a SHA256 sum of the line's content, indentation included and trailing whitespace excluded (see
+// GetLineID).
 type LineID string
 
 // GetLineID returns the line ID for the line in the list identified by listName, with content s.

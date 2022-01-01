@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net"
 	"net/http"
 
@@ -17,6 +18,15 @@ type GetTaskListResponse struct {
 }
 
 type ArchiveLineResponse struct {
+	Error string `json:"error,omitempty"`
+}
+
+type InsertTaskRequest struct {
+	LineID common.LineID `json:"line_id"`
+	Task   *common.Task  `json:"task"`
+}
+
+type InsertTaskResponse struct {
 	Error string `json:"error,omitempty"`
 }
 
@@ -93,6 +103,22 @@ func (api *Server) Start(addr string) error {
 			c.JSON(404, ArchiveLineResponse{Error: err.Error()})
 		} else {
 			c.JSON(200, ArchiveLineResponse{})
+		}
+	})
+
+	router.POST("/insert_task/", func(c *gin.Context) {
+		req := new(InsertTaskRequest)
+		jsonData, err := ioutil.ReadAll(c.Request.Body)
+		err = json.Unmarshal(jsonData, req)
+		if err != nil {
+			c.JSON(400, InsertTaskResponse{Error: err.Error()})
+		}
+
+		err = api.taskstore.InsertTask(req.LineID, req.Task)
+		if err != nil {
+			c.JSON(404, InsertTaskResponse{Error: err.Error()})
+		} else {
+			c.JSON(200, InsertTaskResponse{})
 		}
 	})
 
