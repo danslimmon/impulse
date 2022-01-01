@@ -2,3 +2,4 @@ impulse
 .*.sw?
 .sw?
 *~
+debug.test
