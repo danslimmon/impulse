@@ -48,16 +48,18 @@ func listenAddr() string {
 	if ap == nil {
 		ap = new(addrPool)
 	}
-	return ap.Get()
+	//@DEBUG
+	addr := ap.Get()
+	fmt.Printf("%s\n", addr)
+	return addr
 }
 
 func TestServer_GetTaskList(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
-	ts := NewBasicTaskstore(
-		NewFilesystemDatastore("./testdata"),
-	)
+	ts, cleanup := NewBasicTaskstoreWithTestdata()
+	defer cleanup()
 
 	api := &Server{
 		taskstore: ts,
@@ -168,7 +170,7 @@ func TestServer_ArchiveLine_LineMissing(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
-	ts, cleanup := newBasicTaskstoreWithTestdata()
+	ts, cleanup := NewBasicTaskstoreWithTestdata()
 	defer cleanup()
 
 	api := &Server{
@@ -202,7 +204,7 @@ func TestServer_ArchiveLine_FileMissing(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
-	ts, cleanup := newBasicTaskstoreWithTestdata()
+	ts, cleanup := NewBasicTaskstoreWithTestdata()
 	defer cleanup()
 
 	api := &Server{

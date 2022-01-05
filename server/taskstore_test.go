@@ -9,16 +9,6 @@ import (
 	"github.com/danslimmon/impulse/common"
 )
 
-// newBasicTaskstoreWithTestdata returns a BasicTaskstore based on a clone of the server/testdata
-// directory in a tempdir.
-//
-// newBasicTaskstoreWithTestdata also returns a function to call when the test is over. Calling this
-// function will remove the temporary directory.
-func newBasicTaskstoreWithTestdata() (*BasicTaskstore, func()) {
-	ds, cleanup := newFSDatastoreWithTestdata()
-	return NewBasicTaskstore(ds), cleanup
-}
-
 func TestBasicTaskstore_derefLineId(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
@@ -72,8 +62,9 @@ func TestBasicTaskstore_derefLineId(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		ds := NewFilesystemDatastore("./testdata")
-		ts := NewBasicTaskstore(ds)
+		ts, cleanup := NewBasicTaskstoreWithTestdata()
+		defer cleanup()
+
 		rsltListName, rsltLineNo, rsltErr := ts.derefLineId(tc.LineId)
 		if !tc.ExpErr {
 			assert.Nil(rsltErr)
@@ -106,8 +97,9 @@ func TestBasicTaskstore_GetList(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		ds := NewFilesystemDatastore("./testdata")
-		ts := NewBasicTaskstore(ds)
+		ts, cleanup := NewBasicTaskstoreWithTestdata()
+		defer cleanup()
+
 		rslt, err := ts.GetList(tc.ListName)
 		assert.Nil(err)
 		assert.Equal(len(tc.Exp), len(rslt))
@@ -150,7 +142,7 @@ func TestBasicTaskstore_PutList(t *testing.T) {
 	a.AddChild(common.NewTreeNode("yankee"))
 	b := common.NewTreeNode("bravo")
 
-	ts, cleanup := newBasicTaskstoreWithTestdata()
+	ts, cleanup := NewBasicTaskstoreWithTestdata()
 	defer cleanup()
 
 	err := ts.PutList("foo", []*common.Task{
@@ -174,7 +166,7 @@ func TestBasicTaskstore_InsertTask(t *testing.T) {
 	a.AddChild(common.NewTreeNode("yankee"))
 	b := common.NewTreeNode("bravo")
 
-	ts, cleanup := newBasicTaskstoreWithTestdata()
+	ts, cleanup := NewBasicTaskstoreWithTestdata()
 	defer cleanup()
 
 	// Insert alpha at the top of make_pasta

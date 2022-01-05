@@ -23,7 +23,7 @@ func copyMakePastaDir() (string, func()) {
 		panic(err.Error())
 	}
 
-	c := exec.Command("cp", "../server/testdata/make_pasta", path.Join(d, "_"))
+	c := exec.Command("cp", "../server/testdata/make_pasta", path.Join(d, "make_pasta"))
 	if err := c.Run(); err != nil {
 		panic(err.Error())
 	}
@@ -35,18 +35,16 @@ func copyMakePastaDir() (string, func()) {
 	return d, cleanup
 }
 
-// Returns a server/client pair with the server/testdata/make_pasta data as _.
+// testServerAndClient returns a server/client pair with the server/testdata data.
 //
 // The returned server is already started.
 //
-// cleanup is a function that should be called when the test is done with the returned server and
+// Also returns a function that should be called when the test is done with the returned server and
 // client.
-func makePastaPair() (*server.Server, *Client, func()) {
-	dataDir, copyCleanup := copyMakePastaDir()
-
+func testServerAndClient() (*server.Server, *Client, func()) {
 	addr := "127.0.0.1:30272"
-	ds := server.NewFilesystemDatastore(dataDir)
-	ts := server.NewBasicTaskstore(ds)
+	ts, tsCleanup := server.NewBasicTaskstoreWithTestdata()
+
 	apiServer := server.NewServer(ts)
 	if err := apiServer.Start(addr); err != nil {
 		panic("failed to start test server on " + addr + ": " + err.Error())
@@ -55,13 +53,9 @@ func makePastaPair() (*server.Server, *Client, func()) {
 	apiClient := NewClient(addr)
 
 	cleanup := func() {
-		err := apiServer.Stop()
-		if err != nil {
-			panic(err.Error())
-		}
-		copyCleanup()
+		apiServer.Stop()
+		tsCleanup()
 	}
-
 	return apiServer, apiClient, cleanup
 }
 
@@ -69,9 +63,9 @@ func Test_Client_GetTaskList(t *testing.T) {
 	// no t.Parallel() so we don't have to worry about giving out unique server ports
 	assert := assert.New(t)
 
-	_, client, cleanup := makePastaPair()
+	_, client, cleanup := testServerAndClient()
 	defer cleanup()
-	resp, err := client.GetTaskList("_")
+	resp, err := client.GetTaskList("make_pasta")
 	assert.Nil(err)
 	assert.Equal(common.MakePasta(), resp.Result)
 }
@@ -80,7 +74,7 @@ func Test_Client_GetTaskList_Nonexistent(t *testing.T) {
 	// no t.Parallel() so we don't have to worry about giving out unique server ports
 	assert := assert.New(t)
 
-	_, client, cleanup := makePastaPair()
+	_, client, cleanup := testServerAndClient()
 	defer cleanup()
 	_, err := client.GetTaskList("nonexistent_task_list")
 	assert.NotNil(err)
@@ -90,9 +84,9 @@ func Test_Client_ArchiveLine(t *testing.T) {
 	// no t.Parallel() so we don't have to worry about giving out unique server ports
 	assert := assert.New(t)
 
-	_, client, cleanup := makePastaPair()
+	_, client, cleanup := testServerAndClient()
 	defer cleanup()
-	_, err := client.ArchiveLine(common.GetLineID("_", "\t\tput water in pot"))
+	_, err := client.ArchiveLine(common.GetLineID("make_pasta", "\t\tput water in pot"))
 	assert.Nil(err)
 }
 
@@ -100,7 +94,7 @@ func Test_Client_ArchiveLine_Error(t *testing.T) {
 	// no t.Parallel() so we don't have to worry about giving out unique server ports
 	assert := assert.New(t)
 
-	_, client, cleanup := makePastaPair()
+	_, client, cleanup := testServerAndClient()
 	defer cleanup()
 	_, err := client.ArchiveLine("malformed_task_id")
 	assert.NotNil(err)
@@ -110,10 +104,10 @@ func Test_Client_InsertTask(t *testing.T) {
 	// no t.Parallel() so we don't have to worry about giving out unique server ports
 	assert := assert.New(t)
 
-	_, client, cleanup := makePastaPair()
+	_, client, cleanup := testServerAndClient()
 	defer cleanup()
 	_, err := client.InsertTask(
-		common.LineID("_:0"),
+		common.LineID("make_pasta:0"),
 		common.NewTask(common.NewTreeNode("alpha")),
 	)
 	assert.Nil(err)
