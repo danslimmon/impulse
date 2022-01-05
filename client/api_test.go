@@ -105,3 +105,16 @@ func Test_Client_ArchiveLine_Error(t *testing.T) {
 	_, err := client.ArchiveLine("malformed_task_id")
 	assert.NotNil(err)
 }
+
+func Test_Client_InsertTask(t *testing.T) {
+	// no t.Parallel() so we don't have to worry about giving out unique server ports
+	assert := assert.New(t)
+
+	_, client, cleanup := makePastaPair()
+	defer cleanup()
+	_, err := client.InsertTask(
+		common.LineID("_:0"),
+		common.NewTask(common.NewTreeNode("alpha")),
+	)
+	assert.Nil(err)
+}

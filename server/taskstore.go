@@ -172,6 +172,9 @@ func (ts *BasicTaskstore) PutList(name string, taskList []*common.Task) error {
 // See common.LineID docs for information about how position is interpreted.
 func (ts *BasicTaskstore) InsertTask(lineId common.LineID, task *common.Task) error {
 	listName, lineNo, err := ts.derefLineId(lineId)
+	if err != nil {
+		return err
+	}
 
 	taskList, err := ts.GetList(listName)
 	if err != nil {

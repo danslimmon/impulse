@@ -48,5 +48,12 @@ func main() {
 		if err != nil {
 			panic(fmt.Sprintf("failed to archive line with ID `%s`: %s", os.Args[2], err.Error()))
 		}
+	case "insert":
+		lineID := common.LineID(fmt.Sprintf("%s:%s", os.Args[2], os.Args[3]))
+		text := os.Args[4]
+		_, err := apiClient.InsertTask(lineID, common.NewTask(common.NewTreeNode(text)))
+		if err != nil {
+			panic(fmt.Sprintf("failed to insert task: %s", err.Error()))
+		}
 	}
 }
