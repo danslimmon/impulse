@@ -76,6 +76,24 @@ func TestBasicTaskstore_derefLineId(t *testing.T) {
 	}
 }
 
+func TestBasicTaskstore_GetTask(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+
+	ts, cleanup := NewBasicTaskstoreWithTestdata()
+	defer cleanup()
+
+	task, err := ts.GetTask(common.GetLineID("make_pasta", "make pasta"))
+	assert.Nil(err)
+	makePasta := common.MakePasta()[0]
+	assert.True(makePasta.RootNode.Equal(task.RootNode))
+
+	task, err = ts.GetTask(common.GetLineID("multiple_nested", "task 1"))
+	assert.Nil(err)
+	multipleNestedTask1 := common.MultipleNested()[1]
+	assert.True(multipleNestedTask1.RootNode.Equal(task.RootNode))
+}
+
 func TestBasicTaskstore_GetList(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)

@@ -11,6 +11,8 @@ import (
 
 // Taskstore provides read and write access to Tree structs persisted to the Datastore.
 type Taskstore interface {
+	GetTask(common.LineID) (*common.Task, error)
+
 	GetList(string) ([]*common.Task, error)
 	PutList(string, []*common.Task) error
 	InsertTask(common.LineID, *common.Task) error
@@ -72,6 +74,24 @@ func (ts *BasicTaskstore) derefLineId(lineId common.LineID) (string, int, error)
 	}
 
 	return listName, lineNo, nil
+}
+
+// GetTask returns the task at the given line ID.
+//
+// If no such task exists, GetTask returns an error.
+func (ts *BasicTaskstore) GetTask(lineId common.LineID) (*common.Task, error) {
+	taskListId, _, err := ts.derefLineId(lineId)
+	if err != nil {
+		return nil, err
+	}
+
+	taskList, err := ts.GetList(taskListId)
+	for _, task := range taskList {
+		if lineId == common.GetLineID(taskListId, task.RootNode.Referent) {
+			return task, nil
+		}
+	}
+	return nil, fmt.Errorf("Task '%s' not found", lineId)
 }
 
 // Get retrieves the task list with the given name from the persistent Datastore.
