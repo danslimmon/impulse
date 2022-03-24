@@ -95,4 +95,19 @@ func TestGetTask(t *testing.T) {
 	assert.True(apiResp.Tasks[0].RootNode.Equal(makePasta.RootNode))
 	assert.True(apiResp.Tasks[1].RootNode.Equal(multipleNested[0].RootNode))
 	assert.True(apiResp.Tasks[2].RootNode.Equal(multipleNested[1].RootNode))
+
+	// Same task ID supplied twice
+	apiReq = new(GetTaskRequest)
+	apiReq.TaskIDs = []string{
+		string(common.GetLineID("multiple_nested", "task 1")),
+		string(common.GetLineID("multiple_nested", "task 1")),
+	}
+	apiResp = new(GetTaskResponse)
+	err = api.GetTask(apiReq, apiResp)
+	assert.Equal(nil, err)
+
+	assert.Equal(2, len(apiResp.Tasks))
+	assert.True(apiResp.Tasks[0].RootNode.Equal(multipleNested[1].RootNode))
+	assert.True(apiResp.Tasks[1].RootNode.Equal(multipleNested[1].RootNode))
+
 }
