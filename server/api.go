@@ -82,16 +82,16 @@ func (s *Server) GetTask(req *GetTaskRequest, resp *GetTaskResponse) error {
 		if len(req.TaskIDs) == 0 {
 			return nil
 		}
-
-		resp.Tasks = make([]*common.Task, len(req.TaskIDs))
-		for i := range req.TaskIDs {
-			task, err := s.taskstore.GetTask(req.TaskIDs[i])
-			if err == nil {
-				return err
-			}
-			resp.Tasks[i] = task
-		}
 	*/
+
+	resp.Tasks = make([]*common.Task, len(req.TaskIDs))
+	for i := range req.TaskIDs {
+		task, err := s.taskstore.GetTask(common.LineID(req.TaskIDs[i]))
+		if err != nil {
+			return err
+		}
+		resp.Tasks[i] = task
+	}
 
 	return nil
 }

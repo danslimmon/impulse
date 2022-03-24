@@ -5,8 +5,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/danslimmon/impulse/common"
 	"github.com/stretchr/testify/assert"
-	//"github.com/danslimmon/impulse/common"
 )
 
 // ap is a singleton addrPool that we use to provision addrs for tests to listen on.
@@ -59,12 +59,14 @@ func TestGetTask(t *testing.T) {
 	assert.Nil(err)
 
 	apiReq := new(GetTaskRequest)
+	apiReq.TaskIDs = []string{
+		string(common.GetLineID("make_pasta", "make pasta")),
+	}
 	apiResp := new(GetTaskResponse)
 	err = api.GetTask(apiReq, apiResp)
 	assert.Equal(nil, err)
-	/*
-		makePasta := common.MakePasta()[0]
-			assert.Equal(1, len(apiResp.Tasks))
-			assert.True(apiResp.Tasks[0].RootNode.Equal(makePasta.RootNode))
-	*/
+
+	makePasta := common.MakePasta()[0]
+	assert.Equal(1, len(apiResp.Tasks))
+	assert.True(apiResp.Tasks[0].RootNode.Equal(makePasta.RootNode))
 }
