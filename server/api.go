@@ -29,7 +29,7 @@ func (api *Server) Start(addr string) error {
 	api.assignTaskstore()
 	rpc.Register(api)
 
-	tcpAddr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:4358")
+	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
 		return err
 	}
